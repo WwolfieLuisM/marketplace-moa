@@ -1,0 +1,10 @@
+{
+  "name": "marketplace-moa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marketplace local de Moa - frontend Next.js (Cloudflare Pages) + backend Express/Fastify (Render) + Postgres Neon",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev"
+  }
+}

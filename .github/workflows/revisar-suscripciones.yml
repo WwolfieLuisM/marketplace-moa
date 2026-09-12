@@ -1,0 +1,16 @@
+name: Revisar suscripciones diarias
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  revisar-suscripciones:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar job de mantenimiento de suscripciones
+        run: |
+          curl -sS -f -X POST \
+            -H "X-Job-Key: ${{ secrets.JOB_SECRET_KEY }}" \
+            https://<BACKEND-URL>.onrender.com/admin/jobs/revisar-suscripciones

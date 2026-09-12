@@ -1,0 +1,34 @@
+# Dependencias
+node_modules/
+
+# Builds
+.next/
+out/
+dist/
+build/
+.vercel/
+
+# Variables de entorno (real values nunca al repo; el .env.example sí va)
+.env
+.env.local
+.env.*.local
+
+# Service account de Firebase (nunca subir)
+*firebase-adminsdk*.json
+*serviceAccount*.json
+
+# Prisma local
+*.db
+*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
