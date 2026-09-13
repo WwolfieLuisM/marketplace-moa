@@ -7,7 +7,21 @@ let habilitado = false;
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
+
+function cleanPem(raw) {
+  if (!raw) return raw;
+  let v = raw.trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    v = v.slice(1, -1);
+  }
+  const marker = "-----END PRIVATE KEY-----";
+  const end = v.indexOf(marker);
+  if (end !== -1) v = v.substring(0, end + marker.length);
+  return v;
+}
+
+const privateKey = cleanPem(privateKeyRaw);
 
 if (projectId && clientEmail && privateKey) {
   try {

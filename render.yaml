@@ -24,7 +24,7 @@ services:
         value: "10000"
       # URL del servicio Render: se reemplaza tras el primer deploy con la URL real.
       - key: NEXT_PUBLIC_API_URL
-        value: https://moa-api.onrender.com
+        value: https://moa-api-8y3i.onrender.com
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL
