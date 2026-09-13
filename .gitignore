@@ -21,6 +21,12 @@ build/
 *.db
 *.db-journal
 
+# Engines/binarios de instalación offline de Prisma (no van al repo)
+offline/
+
+# Config de npm local (retries de red lenta, no aplica a CI/Render)
+backend/.npmrc
+
 # Logs
 *.log
 npm-debug.log*

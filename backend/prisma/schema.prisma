@@ -1,0 +1,241 @@
+// Marketplace Moa — schema de datos (PostgreSQL / Neon)
+// Documento de referencia: prompt-opencode-marketplace-moa
+// Pendiente de revisión por el product owner ANTES de migrar contra Neon.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Usuarios de la plataforma (invitado no se almacena).
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  nombre       String
+  apellidos    String
+  email        String   @unique
+  telefono     String?
+  passwordHash String?  @map("password_hash")
+  authProvider String   @map("auth_provider") // 'google' | 'local'
+  reparto      String?
+  rol          String   @default("usuario") // 'usuario' | 'vendedor' | 'admin'
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  verificacionIdentidad     VerificacionIdentidad?
+  vendedorPerfil            VendedorPerfil?       @relation("Vendedor")
+  aprobacionesLicencias     VendedorPerfil[]      @relation("Aprobador")
+  mensajesEnviados          Mensaje[]             @relation("MensajeRemitente")
+  mensajesRecibidos         Mensaje[]             @relation("MensajeDestinatario")
+  notificaciones            Notificacion[]
+  deviceTokens              DeviceToken[]
+  reportesHechos            Reporte[]             @relation("ReportesHechos")
+  favoritos                 Favorito[]
+
+  @@map("users")
+}
+
+/// CRÍTICO: número de carnet de identidad. NUNCA exponer por API pública.
+/// Solo el panel admin (rol admin) puede hacer join con esta tabla.
+model VerificacionIdentidad {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  numeroCi    String   @map("numero_ci")
+  capturadoEn DateTime @default(now()) @map("capturado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("verificacion_identidad")
+}
+
+/// Perfil de vendedor y su licencia/suscripción.
+model VendedorPerfil {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @unique @map("user_id") @db.Uuid
+  tipo                  String    // 'individual' | 'tcp' | 'empresa_estatal'
+  nombreNegocio         String?   @map("nombre_negocio")
+  categoriaNegocio      String?   @map("categoria_negocio")
+  horarioAtencion       String?   @map("horario_atencion")
+  direccionFisica       String?   @map("direccion_fisica")
+  estadoLicencia        String    @default("pendiente") @map("estado_licencia")
+  estadoSuscripcion     String    @default("demo") @map("estado_suscripcion")
+  demoIniciaEn          DateTime? @map("demo_inicia_en") @db.Timestamptz(6)
+  demoTerminaEn         DateTime? @map("demo_termina_en") @db.Timestamptz(6)
+  productosTotalDemo    Int       @default(0) @map("productos_total_demo")
+  productosHoy          Int       @default(0) @map("productos_hoy")
+  ultimoResetContador   DateTime? @map("ultimo_reset_contador") @db.Date
+  fechaVencido          DateTime? @map("fecha_vencido") @db.Timestamptz(6)
+  suscripcionVenceEn    DateTime? @map("suscripcion_vence_en") @db.Date
+  ultimoPagoEn          DateTime? @map("ultimo_pago_en") @db.Date
+  aprobadoPor           String?   @map("aprobado_por") @db.Uuid
+  aprobadoEn            DateTime? @map("aprobado_en") @db.Timestamptz(6)
+
+  user       User             @relation("Vendedor", fields: [userId], references: [id])
+  aprobador  User?            @relation("Aprobador", fields: [aprobadoPor], references: [id])
+  zonas      ZonaDomicilio[]
+  publicaciones Publicacion[]
+
+  @@index([estadoSuscripcion, demoTerminaEn], map: "idx_vendedor_perfil_estado")
+  @@map("vendedor_perfil")
+}
+
+/// Zona de domicilio de un vendedor (reparto propio).
+model ZonaDomicilio {
+  id              String   @id @default(uuid()) @db.Uuid
+  vendedorId      String   @map("vendedor_id") @db.Uuid
+  reparto         String
+  costoDomicilio  Decimal  @map("costo_domicilio") @db.Decimal(10, 2)
+  tiempoEstimado  String   @map("tiempo_estimado")
+
+  vendedor VendedorPerfil @relation(fields: [vendedorId], references: [id])
+
+  @@map("zona_domicilio")
+}
+
+/// Publicación agrupadora de hasta 3 productos.
+model Publicacion {
+  id           String   @id @default(uuid()) @db.Uuid
+  vendedorId   String   @map("vendedor_id") @db.Uuid
+  titulo       String
+  reparto      String
+  conDomicilio Boolean  @default(false) @map("con_domicilio")
+  telefonoFijo String?  @map("telefono_fijo")
+  telefonoMovil String? @map("telefono_movil")
+  estado       String   @default("activo") // 'activo' | 'pausado' | 'eliminado'
+  creadoEn     DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  vendedor VendedorPerfil @relation(fields: [vendedorId], references: [id])
+  productos Producto[]
+  reportes  Reporte[]
+
+  @@index([reparto, estado], map: "idx_publicaciones_reparto")
+  @@index([vendedorId], map: "idx_publicaciones_vendedor")
+  @@map("publicaciones")
+}
+
+/// Producto individual dentro de una publicación (máx 3 por publicación).
+model Producto {
+  id            String    @id @default(uuid()) @db.Uuid
+  publicacionId String    @map("publicacion_id") @db.Uuid
+  nombre        String
+  descripcion   String
+  precio        Decimal   @db.Decimal(12, 2)
+  cantidad      Int
+  categoriaId   Int       @map("categoria_id")
+  orden         Int
+  estado        String    @default("activo") // 'activo' | 'pausado' | 'eliminado' | 'vendido'
+  creadoEn      DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  publicacion Publicacion   @relation(fields: [publicacionId], references: [id])
+  categoria   Categoria     @relation(fields: [categoriaId], references: [id])
+  fotos       ProductoFoto[]
+  mensajes    Mensaje[]
+  favoritos   Favorito[]
+
+  @@index([estado], map: "idx_productos_estado")
+  @@index([categoriaId], map: "idx_productos_categoria")
+  // Índice GIN de búsqueda fulltext (tsvector español) NO expresable en Prisma:
+  // se agrega en una migración SQL manual adicional (ver revisión).
+  @@map("productos")
+}
+
+/// Fotos de un producto alojadas en Cloudinary.
+model ProductoFoto {
+  id                  String @id @default(uuid()) @db.Uuid
+  productoId          String @map("producto_id") @db.Uuid
+  cloudinaryPublicId  String @map("cloudinary_public_id")
+  orden               Int
+
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@map("producto_fotos")
+}
+
+/// Categorías de productos.
+model Categoria {
+  id       Int     @id @default(autoincrement())
+  nombre   String
+
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+/// Mensajería comprador ↔ vendedor (sin transacciones in-app).
+model Mensaje {
+  id              String   @id @default(uuid()) @db.Uuid
+  remitenteId     String   @map("remitente_id") @db.Uuid
+  destinatarioId  String   @map("destinatario_id") @db.Uuid
+  productoId      String?  @map("producto_id") @db.Uuid
+  contenido       String
+  leido           Boolean  @default(false)
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  remitente    User     @relation("MensajeRemitente", fields: [remitenteId], references: [id])
+  destinatario User     @relation("MensajeDestinatario", fields: [destinatarioId], references: [id])
+  producto     Producto? @relation(fields: [productoId], references: [id])
+
+  @@index([destinatarioId, leido], map: "idx_mensajes_destinatario")
+  @@map("mensajes")
+}
+
+/// Notificaciones push (Firebase Cloud Messaging).
+model Notificacion {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tipo      String
+  titulo    String
+  cuerpo    String
+  leido     Boolean  @default(false)
+  creadoEn  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notificaciones")
+}
+
+/// Tokens FCM por usuario (para push web).
+model DeviceToken {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  fcmToken    String   @map("fcm_token")
+  plataforma  String   @default("web")
+  creadoEn    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("device_tokens")
+}
+
+/// Favoritos de compradores.
+model Favorito {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  productoId  String   @map("producto_id") @db.Uuid
+  creadoEn    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id])
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@unique([userId, productoId], map: "uq_favorito_user_producto")
+  @@map("favoritos")
+}
+
+/// Reportes de publicaciones.
+model Reporte {
+  id              String   @id @default(uuid()) @db.Uuid
+  reportadoPor    String   @map("reportado_por") @db.Uuid
+  publicacionId   String   @map("publicacion_id") @db.Uuid
+  motivo          String
+  estado          String   @default("pendiente")
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  reportadoPorUser User       @relation("ReportesHechos", fields: [reportadoPor], references: [id])
+  publicacion     Publicacion @relation(fields: [publicacionId], references: [id])
+
+  @@map("reportes")
+}
