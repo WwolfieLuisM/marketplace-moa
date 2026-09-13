@@ -6,12 +6,17 @@ const router = Router();
 
 const REFRESH_COOKIE = "refresh_token";
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
+const COOKIE_SECURE = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === "true"
+  : process.env.NODE_ENV === "production";
+const COOKIE_SAME_SITE =
+  process.env.COOKIE_SAME_SITE || (process.env.NODE_ENV === "production" ? "none" : "lax");
 
 function setRefreshCookie(res, token) {
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAME_SITE,
     maxAge: REFRESH_MAX_AGE,
     path: "/auth",
   });
@@ -20,8 +25,8 @@ function setRefreshCookie(res, token) {
 function clearRefreshCookie(res) {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAME_SITE,
     path: "/auth",
   });
 }
