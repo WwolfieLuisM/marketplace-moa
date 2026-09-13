@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Marketplace Moa — smoke test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f5f5f4; color: #1c1917; margin: 0; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 24px; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 16px; margin-top: 28px; }
+    code { background: #fff; border: 1px solid #e7e5e4; border-radius: 4px; padding: 1px 6px; }
+    button { background: #292524; color: #fff; border: 0; border-radius: 6px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+    button.secondary { background: transparent; color: #292524; border: 1px solid #292524; margin-left: 8px; }
+    input { border: 1px solid #d6d3d1; border-radius: 6px; padding: 7px 10px; font-size: 14px; }
+    .box { margin-top: 10px; border-left: 3px solid #16a34a; background: #fff; padding: 10px 12px; border-radius: 0 6px 6px 0; font-size: 13px; }
+    .box.err { border-left-color: #dc2626; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 6px 0 0; font-size: 11px; }
+    .meta { color: #78716c; font-size: 12px; }
+    .ok { color: #15803d; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Smoke test frontend ↔ backend</h1>
+  <p class="meta">
+    Esta página se sirve desde <code>http://localhost:3000</code> y habla
+    cross-origin con <code id="api-url">…</code> (Render).
+  </p>
+
+  <section>
+    <h2>1. Endpoint público (CORS)</h2>
+    <button onclick="probarFeed()">GET /feed</button>
+    <div id="feed" class="box" hidden></div>
+  </section>
+
+  <section>
+    <h2>2. Login (cookie httpOnly del refresh token)</h2>
+    <input id="cuenta" value="smoke.prueba@test.com" />
+    <input id="password" type="password" value="smoketest123" />
+    <button onclick="probarLogin()">POST /auth/login</button>
+    <div id="login" class="box" hidden></div>
+
+    <h2>2b. ¿La cookie viaja de vuelta? (prueba del refresh)</h2>
+    <button class="secondary" onclick="probarRefresh()">POST /auth/refresh (envía la cookie httpOnly)</button>
+    <div id="refresh" class="box" hidden></div>
+
+    <h2>2c. Autenticado (Bearer)</h2>
+    <button class="secondary" onclick="probarMe()">GET /auth/me</button>
+    <div id="me" class="box" hidden></div>
+  </section>
+
+  <p class="meta" style="margin-top:32px">
+    Para confirmar la cookie en DevTools: Application → Cookies →
+    <code>https://moa-api-8y3i.onrender.com</code> → <code>refresh_token</code>
+    debe ser <code>HttpOnly</code> + <code>Secure</code> + <code>SameSite=None</code>.
+    El 200 de /auth/refresh ya demuestra que se guardó y se envía.
+  </p>
+</main>
+
+<script>
+  const API = "https://moa-api-8y3i.onrender.com";
+  document.getElementById("api-url").textContent = API;
+
+  let accessToken = null;
+
+  async function pedir(metodo, path, body) {
+    const res = await fetch(API + path, {
+      method: metodo,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const texto = await res.text();
+    return { status: res.status, texto };
+  }
+
+  function pintar(id, r, okExtra) {
+    const el = document.getElementById(id);
+    el.hidden = false;
+    el.className = "box" + (r.status >= 200 && r.status < 300 ? "" : " err");
+    let html = "<div class='meta'>status: <b>" + (r.status ?? "error de red") + "</b></div>";
+    if (okExtra) html += "<div class='ok'>" + okExtra + "</div>";
+    html += "<pre>" + (r.texto || "") + "</pre>";
+    el.innerHTML = html;
+  }
+
+  async function probarFeed() {
+    const r = await pedir("GET", "/feed");
+    pintar("feed", r);
+  }
+
+  async function probarLogin() {
+    const r = await pedir("POST", "/auth/login", {
+      cuenta: document.getElementById("cuenta").value,
+      password: document.getElementById("password").value,
+    });
+    accessToken = null;
+    if (r.status === 200 && r.texto) {
+      try { accessToken = JSON.parse(r.texto).accessToken ?? null; } catch { /* noop */ }
+    }
+    pintar("login", r);
+    document.getElementById("refresh").hidden = true;
+    document.getElementById("me").hidden = true;
+  }
+
+  async function probarRefresh() {
+    const r = await pedir("POST", "/auth/refresh");
+    const ok = r.status === 200 ? "✓ La cookie se guardó y se envió (SameSite=None cross-site)." : null;
+    pintar("refresh", r, ok);
+  }
+
+  async function probarMe() {
+    if (!accessToken) {
+      pintar("me", { status: "—", texto: "Primero haz login para obtener el access token." });
+      return;
+    }
+    const res = await fetch(API + "/auth/me", {
+      method: "GET",
+      credentials: "include",
+      headers: { Authorization: "Bearer " + accessToken },
+    });
+    pintar("me", { status: res.status, texto: await res.text() });
+  }
+</script>
+</body>
+</html>
