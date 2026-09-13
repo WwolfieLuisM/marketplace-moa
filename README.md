@@ -35,9 +35,7 @@ Otros modelos definidos en el schema pero sin endpoints aún: `ZonaDomicilio`,
 ## Roadmap
 
 - **Frontend** (Next.js → Cloudflare Pages) — no iniciado
-- **Deploy** del backend a Render (reemplazar `<BACKEND-URL>` en el workflow) y
-  `NEXT_PUBLIC_API_URL` real en Cloudflare
-- Pendientes de infra:
-  - `JOB_SECRET_KEY` en GitHub Secrets (el endpoint de `gh secret` daba 500/502
-    del lado de GitHub en el momento de crearla)
-  - Push de los commits locales una vez el incidente de GitHub esté resuelto
+- **Deploy** del backend a Render (reemplazar `<BACKEND-URL>` en el workflow por
+  la URL real del servicio) y `NEXT_PUBLIC_API_URL` real en Cloudflare
+- Infra lista: `JOB_SECRET_KEY` creada en GitHub Secrets; todos los commits
+  pusheados a `origin/main`
