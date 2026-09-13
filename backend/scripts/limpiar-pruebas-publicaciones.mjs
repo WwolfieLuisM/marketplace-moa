@@ -1,13 +1,18 @@
 import "dotenv/config";
 import prisma from "../src/lib/prisma.js";
 
-const panaderos = await prisma.user.findMany({
-  where: { email: { startsWith: "panadero." } },
+const prefijos = ["panadero.", "mensajero.", "comprador."];
+const usuarios = await prisma.user.findMany({
+  where: { OR: prefijos.map((p) => ({ email: { startsWith: p } })) },
   select: { id: true, email: true },
 });
-console.log("Panaderos encontrados:", panaderos.map((u) => u.email));
+console.log("Usuarios de prueba encontrados:", usuarios.map((u) => u.email));
 
-for (const u of panaderos) {
+for (const u of usuarios) {
+  await prisma.mensaje.deleteMany({
+    where: { OR: [{ remitenteId: u.id }, { destinatarioId: u.id }] },
+  });
+
   const perfil = await prisma.vendedorPerfil.findUnique({ where: { userId: u.id } });
   if (perfil) {
     const publicaciones = await prisma.publicacion.findMany({

@@ -5,6 +5,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import vendedorRoutes from "./modules/vendedores/vendedor.routes.js";
 import publicacionRoutes from "./modules/publicaciones/publicaciones.routes.js";
 import feedRoutes from "./modules/feed/feed.routes.js";
+import mensajesRoutes from "./modules/mensajes/mensajes.routes.js";
 import jobRoutes from "./modules/jobs/jobs.routes.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
@@ -27,6 +28,7 @@ app.use("/auth", authRoutes);
 app.use("/vendedores", vendedorRoutes);
 app.use("/publicaciones", publicacionRoutes);
 app.use("/feed", feedRoutes);
+app.use("/mensajes", mensajesRoutes);
 app.use("/admin/jobs", jobRoutes);
 
 app.use(notFoundHandler);
