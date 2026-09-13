@@ -13,4 +13,4 @@ jobs:
         run: |
           curl -sS -f -X POST \
             -H "X-Job-Key: ${{ secrets.JOB_SECRET_KEY }}" \
-            https://<BACKEND-URL>.onrender.com/admin/jobs/revisar-suscripciones
+            https://moa-api-8y3i.onrender.com/admin/jobs/revisar-suscripciones
