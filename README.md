@@ -35,7 +35,6 @@ Otros modelos definidos en el schema pero sin endpoints aún: `ZonaDomicilio`,
 ## Roadmap
 
 - **Frontend** (Next.js → Cloudflare Pages) — no iniciado
-- **Deploy** del backend a Render (reemplazar `<BACKEND-URL>` en el workflow por
-  la URL real del servicio) y `NEXT_PUBLIC_API_URL` real en Cloudflare
-- Infra lista: `JOB_SECRET_KEY` creada en GitHub Secrets; todos los commits
-  pusheados a `origin/main`
+- Infra lista: backend desplegado en Render (`https://moa-api-8y3i.onrender.com`),
+  DB Neon y Firebase verificados en producción, y job diario corriendo con
+  `JOB_SECRET_KEY` (workflow disparado manualmente — curl 200)
