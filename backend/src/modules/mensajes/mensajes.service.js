@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma.js";
+import notificacionesService from "../notificaciones/notificaciones.service.js";
 
 const MAX_CONTENIDO = 5000;
 
@@ -22,6 +23,11 @@ async function enviar({ userId, datos }) {
   if (texto.length > MAX_CONTENIDO) {
     throw error(`El mensaje no puede superar ${MAX_CONTENIDO} caracteres`, 400);
   }
+
+  const remitente = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { nombre: true, apellidos: true },
+  });
 
   return prisma.$transaction(async (tx) => {
     const destinatario = await tx.user.findUnique({ where: { id: destinatarioId } });
@@ -53,6 +59,29 @@ async function enviar({ userId, datos }) {
       },
       include: { producto: { select: { id: true, nombre: true } } },
     });
+
+    const remitenteNombre = remitente
+      ? `${remitente.nombre} ${remitente.apellidos}`.trim()
+      : "Alguien";
+    const tituloCorto = texto.length > 40 ? texto.slice(0, 40) + "…" : texto;
+    await tx.notificacion.create({
+      data: {
+        userId: destinatarioId,
+        tipo: "nuevo_mensaje",
+        titulo: `Nuevo mensaje de ${remitenteNombre}`,
+        cuerpo: tituloCorto,
+      },
+    });
+
+    return mensaje;
+  }).then(async (mensaje) => {
+    // Push FCM best-effort, fire-and-forget: nunca bloquea el envío del mensaje
+    // ni puede romper el flujo (enviarPush ya captura sus propios errores).
+    notificacionesService.enviarPush({
+      userId: destinatarioId,
+      titulo: `Nuevo mensaje de ${remitente ? `${remitente.nombre} ${remitente.apellidos}`.trim() : "Alguien"}`,
+      cuerpo: texto.length > 40 ? texto.slice(0, 40) + "…" : texto,
+    }).catch(() => {});
     return mensaje;
   });
 }

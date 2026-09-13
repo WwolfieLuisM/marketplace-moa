@@ -1,7 +1,7 @@
 import "dotenv/config";
 import prisma from "../src/lib/prisma.js";
 
-const prefijos = ["panadero.", "mensajero.", "comprador."];
+const prefijos = ["panadero.", "mensajero.", "comprador.", "notif."];
 const usuarios = await prisma.user.findMany({
   where: { OR: prefijos.map((p) => ({ email: { startsWith: p } })) },
   select: { id: true, email: true },
@@ -9,6 +9,8 @@ const usuarios = await prisma.user.findMany({
 console.log("Usuarios de prueba encontrados:", usuarios.map((u) => u.email));
 
 for (const u of usuarios) {
+  await prisma.notificacion.deleteMany({ where: { userId: u.id } });
+  await prisma.deviceToken.deleteMany({ where: { userId: u.id } });
   await prisma.mensaje.deleteMany({
     where: { OR: [{ remitenteId: u.id }, { destinatarioId: u.id }] },
   });
