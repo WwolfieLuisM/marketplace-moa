@@ -15,6 +15,7 @@ function cleanPem(raw) {
   if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
     v = v.slice(1, -1);
   }
+  v = v.replace(/\\n/g, "\n");
   const marker = "-----END PRIVATE KEY-----";
   const end = v.indexOf(marker);
   if (end !== -1) v = v.substring(0, end + marker.length);
