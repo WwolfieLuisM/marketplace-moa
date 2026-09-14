@@ -193,7 +193,7 @@ async function detallePublico(id) {
     include: {
       vendedor: {
         include: {
-          user: { select: { nombre: true, apellidos: true, reparto: true } },
+          user: { select: { id: true, nombre: true, apellidos: true, reparto: true } },
           zonas: true,
         },
       },

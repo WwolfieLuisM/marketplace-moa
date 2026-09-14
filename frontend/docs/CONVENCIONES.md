@@ -114,6 +114,20 @@ Context (`AuthProvider`) y en memoria.
    (`C:\Users\rosal\package-lock.json`) al inferir la raíz. Silenciar con
    `outputFileTracingRoot` en `next.config.ts` cuando se cree.
 
+6. **`POST /mensajes` cuerpo**: `{ destinatarioId, productoId?, contenido }`.
+   `productoId` es **opcional** (backend acepta `null`); el componente hilo lo
+   envía desde el query `?producto=` que pasó el ProductCard ("Contactar
+   vendedor") o desde el último mensaje con producto en hilos existentes. Si
+   se omite, enviar explícitamente `productoId: null` para que el backend lo
+   reciba como `undefined` y no como string `"null"`.
+
+7. **`GET /mensajes/conversaciones/:otroUserId` (hilo) y `leido`**: ejecuta
+   `findMany` antes de `updateMany` dentro de la misma transacción, así que
+   la primera respuesta devuelve mensajes **con `leido` falso** aunque el
+   side-effect sí se aplicó. La siguiente llamada (poll 12 s o recarga) sí
+   refleja `leido: true`. El componente solo usa el flag en mis mensajes, así
+   que no afecta la UX, pero ojo al consumirlo en otra parte.
+
 ## Estado actual
 
 Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod:
@@ -140,14 +154,28 @@ Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod
 - Env vars locales: `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
 - `outputFileTracingRoot` ya configurado (`next.config.ts`) → warning de
   workspace root silenciado.
+- **Backend tweak mínimo** (`publicaciones.service.js`): `detallePublico` ahora
+  expone `vendedor.user.id` (necesario para abrir chat desde el feed).
+- `/mensajes` (`app/mensajes/page.tsx`): lista de conversaciones con
+  no-leidos por hilo; `?publicacion=X` resuelve vendedor por detalle público
+  y redirige al hilo con contexto del primer producto.
+- `/mensajes/[conversacionId]` (`app/mensajes/[conversacionId]/page.tsx`):
+  hilo estilo prototipo (max-w-[480px]), polling 12 s, contexto de producto
+  fijo arriba, enviar con `POST /mensajes { destinatarioId, productoId?, contenido }`,
+  burbujas con día/Hoy/fecha + checks leído. Marca leído al abrir el hilo
+  (llamada backend con side-effect).
+- `Header` actualizado: badge de no-leídos en el icono Chat (polling 30 s).
+- `lib/fecha.ts`: helpers `formatearHora`, `claveDia`, `formatearLista`.
 
 ## Pendientes
 
-- `/mensajes` (lista + hilo; polling ~12 s), `/publicaciones/nueva`,
-  `/publicaciones/:id`, `/vendedor/solicitud`, `/vendedor/perfil`,
-  `/vendedor/[id]`, `/admin/*`, `/perfil`, `/favoritos`.
-- Migrar `frontend/prototipo-mensajes.html`; borrar junto con
+- `/publicaciones/nueva` (requiere vendedor licencia aprobado; Cloudinary upload directo con preset) y `/publicaciones/:id`.
+- `/vendedor/solicitud`, `/vendedor/perfil`, `/vendedor/[id]`; `/admin/*`; `/perfil`; `/favoritos`.
+- Borrar `frontend/prototipo-mensajes.html` (ya migrado); pendiente también
   `prototipo-login.html` y `prototipo-feed.html` (ya migrados).
+- Ajustes de responsive móvil que surjan al probar en el teléfono.
+- Deploy a Cloudflare Pages al final (crear proyecto, setear las 2 env vars y
+  agregar el dominio al OAuth client de Google).
 - Ajustes de responsive móvil que surjan al probar en el teléfono.
 - Deploy a Cloudflare Pages al final (crear proyecto, setear las 2 env vars y
   agregar el dominio al OAuth client de Google).

@@ -66,3 +66,44 @@ export const REPARTOS_MOA = [
   "Rolo Monterrey",
   "Otro municipio",
 ];
+
+export type DetallePublicacion = {
+  id: string;
+  titulo: string;
+  reparto?: string | null;
+  conDomicilio: boolean;
+  telefonoFijo?: string | null;
+  telefonoMovil?: string | null;
+  estado: string;
+  creadoEn: string;
+  vendedor?: {
+    user?: { id?: string; nombre: string; apellidos?: string | null } | null;
+    estadoSuscripcion?: string;
+    zonas?: { id: string; reparto?: string | null }[];
+  } | null;
+  productos: Producto[];
+};
+
+export type Mensaje = {
+  id: string;
+  remitenteId: string;
+  destinatarioId: string;
+  productoId?: string | null;
+  contenido: string;
+  leido: boolean;
+  creadoEn: string;
+  remitente?: { id: string; nombre: string; apellidos?: string | null };
+  producto?: { id: string; nombre: string } | null;
+};
+
+export type Conversacion = {
+  otroUsuarioId: string;
+  otroUsuario: { id: string; nombre: string; apellidos?: string | null };
+  ultimoMensaje: Mensaje;
+  noLeidos: number;
+};
+
+export type HiloConversacion = {
+  otroUsuario: { id: string; nombre: string; apellidos?: string | null };
+  mensajes: Mensaje[];
+};
