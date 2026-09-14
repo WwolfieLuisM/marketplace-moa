@@ -176,10 +176,17 @@ Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod
   `POST /publicaciones` → redirect a `/publicaciones/:id`. Las fotos se
   mandan como data-URI `data:image/(png|jpe?g|webp);base64,` (el backend las
   sube a Cloudinary vía `subirFoto` — NO hay endpoint de upload aparte).
+- `/publicaciones/:id` (`app/publicaciones/[id]/`): detalle público con
+  galería de fotos, productos (precio, categoría, cantidad), teléfonos
+  `tel:` y tarjeta del vendedor (nombre, negocio, horario, direccionFisica,
+  zonas de domicilio que coinciden con `reparto`). Estado no encontrado
+  (404) con vuelta al feed. Importante: el `vendedor.user.id` NO viene en
+  `detallePublico` hasta que Render redepliegue el tweak `id:true`; los
+  enlaces de contacto usan `vendedor.userId` (perfil) que SÍ viene siempre,
+  → `/mensajes/{userId}?publicacion=&producto=`.
 
 ## Pendientes
 
-- `/publicaciones/:id` (detalle; retomar vista tras crear).
 - `/vendedor/solicitud`, `/vendedor/perfil`, `/vendedor/[id]`; `/admin/*`; `/perfil`; `/favoritos`.
 - Borrar `frontend/prototipo-mensajes.html` (ya migrado); pendiente también
   `prototipo-login.html` y `prototipo-feed.html` (ya migrados).

@@ -41,12 +41,14 @@ export default function MensajesPage() {
     api
       .get<{ publicacion: DetallePublicacion }>(`/publicaciones/${publicacionId}`)
       .then((data) => {
-        const vendedorId = data.publicacion.vendedor?.user?.id;
-        if (!vendedorId) throw new Error("La publicación no tiene vendedor visible.");
-        const primerProducto = data.publicacion.productos?.[0];
+        const vendedorUserId = data.publicacion.vendedor?.userId;
+        if (!vendedorUserId) throw new Error("La publicación no tiene vendedor visible.");
+        const productoElegido = params.get("producto");
+        const producto = data.publicacion.productos?.find((p) => p.id === productoElegido)
+          ?? data.publicacion.productos?.[0];
         const query = new URLSearchParams({ publicacion: publicacionId });
-        if (primerProducto) query.set("producto", primerProducto.id);
-        router.replace(`/mensajes/${vendedorId}?${query.toString()}`);
+        if (producto) query.set("producto", producto.id);
+        router.replace(`/mensajes/${vendedorUserId}?${query.toString()}`);
       })
       .catch((e) => {
         if (e instanceof ApiError && e.status === 404) {

@@ -67,6 +67,26 @@ export const REPARTOS_MOA = [
   "Otro municipio",
 ];
 
+export type ZonaDomicilio = {
+  id: string;
+  reparto: string;
+  costoDomicilio: string;
+  tiempoEstimado: string;
+};
+
+export type DetalleVendedor = {
+  id: string;
+  userId: string;
+  tipo: string;
+  nombreNegocio?: string | null;
+  categoriaNegocio?: string | null;
+  horarioAtencion?: string | null;
+  direccionFisica?: string | null;
+  estadoSuscripcion: string;
+  user?: { id?: string; nombre: string; apellidos?: string | null; reparto?: string | null } | null;
+  zonas?: ZonaDomicilio[];
+};
+
 export type DetallePublicacion = {
   id: string;
   titulo: string;
@@ -76,11 +96,7 @@ export type DetallePublicacion = {
   telefonoMovil?: string | null;
   estado: string;
   creadoEn: string;
-  vendedor?: {
-    user?: { id?: string; nombre: string; apellidos?: string | null } | null;
-    estadoSuscripcion?: string;
-    zonas?: { id: string; reparto?: string | null }[];
-  } | null;
+  vendedor?: DetalleVendedor | null;
   productos: Producto[];
 };
 
