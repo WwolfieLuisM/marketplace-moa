@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next dev",
+    "build": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next build",
+    "start": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next start"
   },
   "dependencies": {
     "next": "^15.5.6",
