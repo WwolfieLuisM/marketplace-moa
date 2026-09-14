@@ -10,7 +10,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-xl items-center justify-between gap-3 px-4">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
         <Link href="/feed" className="flex items-center gap-2">
           <IconLogo className="h-8 w-8" />
           <span className="text-[17px] font-bold text-ink">Marketplace Moa</span>

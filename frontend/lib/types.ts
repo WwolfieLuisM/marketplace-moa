@@ -38,6 +38,21 @@ export type FeedPublicacion = {
 
 export type Categoria = { id: number; nombre: string };
 
+export type ProductoResultado = Producto & {
+  score: number;
+  publicacion: {
+    id: string;
+    titulo: string;
+    reparto?: string | null;
+    conDomicilio: boolean;
+    telefonoFijo?: string | null;
+    telefonoMovil?: string | null;
+    estado: string;
+    creadoEn: string;
+    vendedor?: FeedVendedor | null;
+  };
+};
+
 export const REPARTOS_MOA = [
   "Centro",
   "Atlántico",
