@@ -13,11 +13,21 @@ export type Usuario = {
   rol: string;
 };
 
+export type DatosRegistro = {
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
+  telefono?: string;
+  reparto?: string;
+};
+
 type AuthState = {
   accessToken: string | null;
   usuario: Usuario | null;
   cargando: boolean;
   login: (email: string, password: string) => Promise<void>;
+  registrar: (datos: DatosRegistro) => Promise<void>;
   loginGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   setUsuario: (u: Usuario | null) => void;
@@ -74,6 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [aplicarSesion],
   );
 
+  const registrar = useCallback(
+    async (datos: DatosRegistro) => {
+      const data = await api.post<{ accessToken: string; user?: Usuario }>("/auth/register", datos);
+      aplicarSesion(data);
+    },
+    [aplicarSesion],
+  );
+
   const loginGoogle = useCallback(
     async (idToken: string) => {
       const data = await api.post<{ accessToken: string; user?: Usuario }>("/auth/google", {
@@ -95,8 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ accessToken, usuario, cargando, login, loginGoogle, logout, setUsuario }),
-    [accessToken, usuario, cargando, login, loginGoogle, logout],
+    () => ({ accessToken, usuario, cargando, login, registrar, loginGoogle, logout, setUsuario }),
+    [accessToken, usuario, cargando, login, registrar, loginGoogle, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
