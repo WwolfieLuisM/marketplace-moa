@@ -107,3 +107,23 @@ export type HiloConversacion = {
   otroUsuario: { id: string; nombre: string; apellidos?: string | null };
   mensajes: Mensaje[];
 };
+
+export type VendedorPerfil = {
+  id: string;
+  userId: string;
+  tipo: string;
+  nombreNegocio?: string | null;
+  categoriaNegocio?: string | null;
+  horarioAtencion?: string | null;
+  direccionFisica?: string | null;
+  estadoLicencia: string;
+  estadoSuscripcion: string;
+  demoIniciaEn?: string | null;
+  demoTerminaEn?: string | null;
+  productosTotalDemo: number;
+  productosHoy: number;
+  fechaVencido?: string | null;
+  suscripcionVenceEn?: string | null;
+  aprobadoEn?: string | null;
+  rol: string;
+};

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import Avatar from "./Avatar";
-import { IconChat, IconHouse, IconLogo, IconLogout } from "./icons";
+import { IconChat, IconHouse, IconLogo, IconLogout, IconPlus } from "./icons";
 
 export default function Header() {
   const { usuario, cargando, logout } = useAuth();
@@ -54,6 +54,13 @@ export default function Header() {
                     {noLeidos}
                   </span>
                 )}
+              </Link>
+              <Link
+                href="/publicaciones/nueva"
+                aria-label="Publicar producto"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-surface"
+              >
+                <IconPlus className="h-5 w-5" />
               </Link>
               <Link href="/perfil" aria-label="Mi perfil">
                 <Avatar nombre={usuario.nombre} apellidos={usuario.apellidos} />

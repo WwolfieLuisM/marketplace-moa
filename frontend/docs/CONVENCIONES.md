@@ -164,12 +164,22 @@ Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod
   fijo arriba, enviar con `POST /mensajes { destinatarioId, productoId?, contenido }`,
   burbujas con día/Hoy/fecha + checks leído. Marca leído al abrir el hilo
   (llamada backend con side-effect).
-- `Header` actualizado: badge de no-leídos en el icono Chat (polling 30 s).
+- `Header` actualizado: badge de no-leídos en el icono Chat (polling 30 s) y
+  botón Publicar (`IconPlus` → `/publicaciones/nueva`) para usuarios logueados.
 - `lib/fecha.ts`: helpers `formatearHora`, `claveDia`, `formatearLista`.
+- `/publicaciones/nueva` (`app/publicaciones/nueva/`): formulario de creación
+  con título, reparto, envío a domicilio, teléfonos y 1–3 productos (nombre,
+  descripción, precio, cantidad, categoría, hasta 3 fotos leídas como base64).
+  Guardia: exige sesión y perfil vendedor aprobado (`GET /vendedores/me`;
+  si es 404 muestra cta a `/vendedor/solicitud`). En demo muestra restantes
+  hoy/total (límites 5 día / 10 total) y bloquea el form si alcanzó el límite.
+  `POST /publicaciones` → redirect a `/publicaciones/:id`. Las fotos se
+  mandan como data-URI `data:image/(png|jpe?g|webp);base64,` (el backend las
+  sube a Cloudinary vía `subirFoto` — NO hay endpoint de upload aparte).
 
 ## Pendientes
 
-- `/publicaciones/nueva` (requiere vendedor licencia aprobado; Cloudinary upload directo con preset) y `/publicaciones/:id`.
+- `/publicaciones/:id` (detalle; retomar vista tras crear).
 - `/vendedor/solicitud`, `/vendedor/perfil`, `/vendedor/[id]`; `/admin/*`; `/perfil`; `/favoritos`.
 - Borrar `frontend/prototipo-mensajes.html` (ya migrado); pendiente también
   `prototipo-login.html` y `prototipo-feed.html` (ya migrados).
