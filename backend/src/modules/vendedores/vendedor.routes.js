@@ -21,6 +21,14 @@ router.get("/me", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/me/publicaciones", requireAuth, async (req, res, next) => {
+  try {
+    res.json({ publicaciones: await vendedorService.misPublicaciones(req.user.sub) });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get("/", requireAuth, requireRoles("admin"), async (req, res, next) => {
   try {
     const { estadoLicencia, estadoSuscripcion } = req.query;

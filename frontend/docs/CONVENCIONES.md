@@ -184,10 +184,29 @@ Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod
   `detallePublico` hasta que Render redepliegue el tweak `id:true`; los
   enlaces de contacto usan `vendedor.userId` (perfil) que SÍ viene siempre,
   → `/mensajes/{userId}?publicacion=&producto=`.
+- `/vendedor/solicitud` (`app/vendedor/solicitud/`): formulario con tipo
+  (individual/TCP/empresa_estatal), nombre, apellidos, número de CI, reparto
+  y, si es negocio: nombreNegocio (obligatorio), categoría, horario y
+  dirección física. `POST /vendedores/solicitud`. Guardias: sin sesión →
+  `/login`; si ya hay perfil (`GET /vendedores/me` OK) → aviso + link a
+  `/vendedor/perfil`. El CI viaja al backend pero NUNCA se muestra en UI.
+  Tras enviar: "Tu solicitud fue enviada, un administrador la revisará."
+- `/vendedor/perfil` (`app/vendedor/perfil/`): `GET /vendedores/me` +
+  `GET /vendedores/me/publicaciones`. Muestra licencia/suscripción (badges
+  colored), tipo, horario, dirección, contadores demo (5 día / 10 total con
+  restantes), fechas (demoTerminaEn / suscripcionVenceEn / exento) y aviso
+  si alcanzó el límite o está pendiente/rechazado. Lista de publicaciones
+  con acciones por producto (`PATCH /publicaciones/:px/productos/:pr` con
+  `estado: pausado|activo|vendido`) y eliminar publicación
+  (`DELETE /publicaciones/:id`, soft-delete, confirm nativo). Las publicadas
+  eliminadas se ven con badge `eliminado` sin acciones ni link al feed.
 
 ## Pendientes
 
-- `/vendedor/solicitud`, `/vendedor/perfil`, `/vendedor/[id]`; `/admin/*`; `/perfil`; `/favoritos`.
+- Backend (cola del push conjunto): `GET /vendedores/me/publicaciones`
+  (deploy pendiente en Render, ya probado local: crea→pausa→activa→borra OK).
+- `/vendedor/[id]` (requiere endpoint público nuevo; hoy `GET /vendedores/:id`
+  es solo admin); `/admin/*`; `/perfil`; `/favoritos`.
 - Borrar `frontend/prototipo-mensajes.html` (ya migrado); pendiente también
   `prototipo-login.html` y `prototipo-feed.html` (ya migrados).
 - Ajustes de responsive móvil que surjan al probar en el teléfono.

@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma.js";
+import { urlFoto } from "../../lib/cloudinary.js";
 
 const TIPOS_VALIDOS = ["individual", "tcp", "empresa_estatal"];
 
@@ -95,6 +96,33 @@ async function miPerfil(userId) {
     throw Object.assign(new Error("No tienes perfil de vendedor"), { status: 404 });
   }
   return perfilPublico(perfil, perfil.user);
+}
+
+async function misPublicaciones(userId) {
+  const perfil = await prisma.vendedorPerfil.findUnique({ where: { userId } });
+  if (!perfil) {
+    throw Object.assign(new Error("No tienes perfil de vendedor"), { status: 404 });
+  }
+  const publicaciones = await prisma.publicacion.findMany({
+    where: { vendedorId: perfil.id },
+    orderBy: { creadoEn: "desc" },
+    include: {
+      productos: {
+        orderBy: { orden: "asc" },
+        include: {
+          categoria: { select: { id: true, nombre: true } },
+          fotos: { orderBy: { orden: "asc" } },
+        },
+      },
+    },
+  });
+  return publicaciones.map((pub) => ({
+    ...pub,
+    productos: pub.productos.map((p) => ({
+      ...p,
+      fotos: p.fotos.map((f) => ({ ...f, url: urlFoto(f.cloudinaryPublicId) })),
+    })),
+  }));
 }
 
 async function aprobar({ adminId, vendedorPerfilId, moda }) {
@@ -198,4 +226,4 @@ async function detalleAdmin(vendedorPerfilId) {
   return perfil;
 }
 
-export default { solicitar, miPerfil, aprobar, rechazar, listarAdmin, detalleAdmin };
+export default { solicitar, miPerfil, misPublicaciones, aprobar, rechazar, listarAdmin, detalleAdmin };

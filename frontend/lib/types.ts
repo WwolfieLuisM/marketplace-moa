@@ -143,3 +143,15 @@ export type VendedorPerfil = {
   aprobadoEn?: string | null;
   rol: string;
 };
+export type MiPublicacion = {
+  id: string;
+  titulo: string;
+  reparto?: string | null;
+  conDomicilio: boolean;
+  telefonoFijo?: string | null;
+  telefonoMovil?: string | null;
+  estado: string;
+  creadoEn: string;
+  productos: Producto[];
+};
+
