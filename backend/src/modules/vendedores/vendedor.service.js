@@ -226,4 +226,63 @@ async function detalleAdmin(vendedorPerfilId) {
   return perfil;
 }
 
-export default { solicitar, miPerfil, misPublicaciones, aprobar, rechazar, listarAdmin, detalleAdmin };
+async function detallePublico(userId) {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(userId)) {
+    throw Object.assign(new Error("Vendedor no encontrado"), { status: 404 });
+  }
+  const perfil = await prisma.vendedorPerfil.findUnique({
+    where: { userId },
+    include: {
+      user: {
+        select: { id: true, nombre: true, apellidos: true, reparto: true, telefono: true },
+      },
+      zonas: true,
+    },
+  });
+  if (!perfil || perfil.estadoLicencia !== "aprobado") {
+    throw Object.assign(new Error("Vendedor no encontrado"), { status: 404 });
+  }
+  const publicaciones = await prisma.publicacion.findMany({
+    where: { vendedorId: perfil.id, estado: "activo" },
+    orderBy: { creadoEn: "desc" },
+    include: {
+      vendedor: {
+        include: { user: { select: { nombre: true, apellidos: true } } },
+      },
+      productos: {
+        where: { estado: "activo" },
+        orderBy: { orden: "asc" },
+        include: {
+          categoria: { select: { id: true, nombre: true } },
+          fotos: { orderBy: { orden: "asc" } },
+        },
+      },
+    },
+  });
+  return {
+    perfil: {
+      id: perfil.id,
+      userId: perfil.userId,
+      tipo: perfil.tipo,
+      nombre: perfil.user.nombre,
+      apellidos: perfil.user.apellidos,
+      reparto: perfil.user.reparto,
+      telefono: perfil.user.telefono,
+      nombreNegocio: perfil.nombreNegocio,
+      categoriaNegocio: perfil.categoriaNegocio,
+      horarioAtencion: perfil.horarioAtencion,
+      direccionFisica: perfil.direccionFisica,
+      zonas: perfil.zonas,
+    },
+    publicaciones: publicaciones.map((pub) => ({
+      ...pub,
+      productos: pub.productos.map((p) => ({
+        ...p,
+        fotos: p.fotos.map((f) => ({ ...f, url: urlFoto(f.cloudinaryPublicId) })),
+      })),
+    })),
+  };
+}
+
+export default { solicitar, miPerfil, misPublicaciones, aprobar, rechazar, listarAdmin, detalleAdmin, detallePublico };

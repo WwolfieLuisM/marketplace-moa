@@ -19,10 +19,11 @@ App de marketplace local para Moa (Cuba): vendedores publican productos (hasta 3
 ## Estado actual
 Repos: https://github.com/WwolfieLuisM/marketplace-moa. GitHub main = `1ebed86`
 (7 commits pusheados: feed, login, registro, mensajes, publicaciones nueva y
-detalle, vendedor, docs). Local sin push (4 commits): `9a850fd` favoritos +
+detalle, vendedor, docs). Local sin push (5 commits): `9a850fd` favoritos +
 nav móvil + `/perfil` + `PATCH /auth/me`; `9258afb` `/admin` (resumen +
-vendedores); `ed71b35` docs; uno nuevo pendiente de hacer (tiles+orden feed +
-fix reparto + docs actualizado).
+vendedores); `ed71b35` docs; `b0395db` tiles+orden feed + fix reparto + docs
+actualizado; uno nuevo pendiente de hacer (vendedor público + borrar
+prototipos).
 
 Construido y verificado (frontend en `frontend/`):
 - Checkpoint 3
@@ -39,11 +40,14 @@ Construido y verificado (frontend en `frontend/`):
 - `/perfil` — editar nombre, apellidos, teléfono y reparto (NUNCA el CI) vía `PATCH /auth/me`; email de solo lectura
 - `/admin` — dashboard con contadores (`GET /admin/resumen`); `/admin/vendedores` — filtros por estado y aprobar (demo/exento) o rechazar con modal
 - `/feed` — tiles horizontales de categorías con íconos SVG (mapa `ICONOS_CATEGORIA` por nombre; "Test Job" oculto en UI) + select de orden (`relevancia`/`recientes`/`menor_precio`/`mayor_precio`, solo en vista feed). `export const dynamic = "force-dynamic"` para que al volver desde otra página SIEMPRE re-ejecute los fetch (sin esto, Next restaura la página prerenderizada estática y queda vacía hasta recargar)
+- `/vendedor/[id]` — perfil público del vendedor (avatar inicial + nombre completo + negocio/reparto, categoría/horario/dirección, botón "Enviar mensaje" o "Inicia sesión para contactar") con sus publicaciones activas usando `ProductCard`. Se enlaza desde el detalle de publicación ("Ver perfil del vendedor", usa `v.userId`). Endpoint público `GET /vendedores/publico/:userId` (404 si no existe o no aprobado) — `detallePublico` en `vendedor.service.js`: perfil con user + zonas + publicaciones activas (vendedor.user + productos c/fotos `urlFoto`). Cereción: 404 si el `userId` (o cualquiera) no es UUID válido
+- Prototipos HTML migrados borrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`)
 
 Cambios backend commiteados pero NO desplegados aún en Render (van en el push conjunto):
 1. `publicaciones.service.js` `detallePublico`: añade `id:true` al select del user del vendedor
 2. Nuevo endpoint `GET /vendedores/me/publicaciones` (solo el dueño; lista todas sus publicaciones con productos/fotos) — `vendedor.routes.js` + `vendedor.service.js` (`misPublicaciones`)
 3. `feed.service.js` `feed()` acepta `orden` (recientes / menor_precio / mayor_precio, default relevancia). El ORDER BY se inyecta desde un mapa cerrado y el resto van como parámetros para NO romper el orden (prisma `$queryRaw` no interpolaba bien el ORDER BY; ahora usa `$queryRawUnsafe` con `$1..$5`). Importante: **el reparto del usuario logueado ya NO filtra el feed por defecto** (el select "Todos los repartos" = ver TODO); solo filtra si el usuario elige un reparto en el UI. El reparto del usuario solo alimenta el score de relevancia. `feed.routes.js` mapea `orden` y pasa ambos repartos.
+4. Nuevo endpoint público `GET /vendedores/publico/:userId` (sin auth) — `vendedor.service.js` `detallePublico`: perfil (user: nombre/apellidos/reparto/telefono + zonas), 404 "Vendedor no encontrado" si no existe o `estadoLicencia !== "aprobado"`, publicaciones activas con vendedor.user + productos activos c/fotos `urlFoto`. Registrado en `vendedor.routes.js` ANTES de la ruta admin `/:id`.
 
 ## Backend: endpoints útiles (API prod / local :3001)
 - Auth: `POST /auth/register {email,...}` · `POST /auth/login {cuenta,password}` · `POST /auth/google {idToken}` · `POST /auth/refresh` · `POST /auth/logout`
@@ -54,6 +58,7 @@ Cambios backend commiteados pero NO desplegados aún en Render (van en el push c
 - `DELETE /publicaciones/:id` (soft-delete → `estado=eliminado`)
 - `GET /vendedores/me` (perfil propio: estadoLicencia, estadoSuscripcion, productosHoy, productosTotalDemo, fechas, rol) — 404 si no hay perfil
 - `GET /vendedores/me/publicaciones` (NUEVO, sin desplegar)
+- `GET /vendedores/publico/:userId` (NUEVO, sin desplegar; PÚBLICO, sin auth; 404 si no existe o no aprobado)
 - `POST /vendedores/solicitud` (crea perfil `pendiente`; guarda CI en `verificacionIdentidad`)
 - Admin: `GET /vendedores?estadoLicencia=&estadoSuscripcion=` · `GET /vendedores/:id` · `POST /vendedores/:id/aprobar {moda?: "demo"|"exento"}` · `POST /vendedores/:id/rechazar`
 - Mensajes: `GET /mensajes/conversaciones` · `GET /mensajes/conversaciones/:otroUserId` (crea/retorna hilo) · `POST /mensajes {destinatarioId, productoId?, contenido}` · `GET /mensajes/no-leidos` · `POST /mensajes/:conversacionId/leer`
@@ -68,7 +73,6 @@ Cambios backend commiteados pero NO desplegados aún en Render (van en el push c
 - Verificaciones: `cd frontend && npx tsc --noEmit`; tras cambios relevantes probar con Invoke-RestMethod contra la API.
 
 ## Qué falta (siguiente plan)
-1. `/vendedor/[id]` — perfil público del vendedor con sus publicaciones activas. **Bloqueante**: hoy `GET /vendedores/:id` es admin-only; hace falta un endpoint público nuevo (o posponer).
-2. Borrar prototipos HTML migrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`).
-3. Responsive móvil al probar en teléfono.
-4. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google; redeploy Render (favoritos, `PATCH /auth/me`, `/admin/resumen`, tiles+orden feed, fix reparto). Push conjunto de los commits locales (favoritos/perfil/admin + tiles+orden + docs). **Antes del push: restaurar `.env.local` a `NEXT_PUBLIC_API_URL=https://moa-api-8y3i.onrender.com`**.
+1. Commit local del bloque vendedor público (endpoint + página + enlace + prototipos borrados + docs) y push conjunto de los 5 commits.
+2. Responsive móvil al probar en teléfono.
+3. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google; redeploy Render (favoritos, `PATCH /auth/me`, `/admin/resumen`, tiles+orden feed, fix reparto, `/vendedores/publico/:userId`). **Antes del push: restaurar `.env.local` a `NEXT_PUBLIC_API_URL=https://moa-api-8y3i.onrender.com`**.

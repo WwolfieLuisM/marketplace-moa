@@ -175,6 +175,25 @@ export function IconLocation(props: IconProps) {
   );
 }
 
+export function IconStore(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 8l1-4.5h12l1 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 7.5V17h12V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 17v-4h4v4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconClock(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="10" cy="10" r="6.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6.5V10l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <svg {...base(props)}>

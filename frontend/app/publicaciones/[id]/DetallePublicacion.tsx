@@ -200,6 +200,14 @@ export default function DetallePublicacion() {
             {v.direccionFisica && (
               <p className="mt-2 text-sm text-white/40">📍 {v.direccionFisica}</p>
             )}
+            {v.userId && (
+              <a
+                href={`/vendedor/${v.userId}`}
+                className="mt-3 inline-block rounded border border-white/15 px-3 py-1.5 text-xs font-semibold text-orange-300 hover:bg-white/10"
+              >
+                Ver perfil del vendedor
+              </a>
+            )}
           </section>
         )}
 

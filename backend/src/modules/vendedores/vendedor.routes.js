@@ -29,6 +29,14 @@ router.get("/me/publicaciones", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/publico/:userId", async (req, res, next) => {
+  try {
+    res.json(await vendedorService.detallePublico(req.params.userId));
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get("/", requireAuth, requireRoles("admin"), async (req, res, next) => {
   try {
     const { estadoLicencia, estadoSuscripcion } = req.query;
