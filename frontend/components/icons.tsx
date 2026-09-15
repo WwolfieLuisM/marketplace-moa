@@ -223,6 +223,19 @@ export function IconStar(props: IconProps) {
   );
 }
 
+export function IconHeart(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" {...props}>
+      <path
+        d="M10 16.5C10 16.5 3 12.1 3 7.6a3.7 3.7 0 017-2.1 3.7 3.7 0 017 2.1c0 4.5-7 8.9-7 8.9Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconLogout(props: IconProps) {
   return (
     <svg {...base(props)}>

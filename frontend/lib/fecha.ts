@@ -22,3 +22,15 @@ export function formatearLista(iso: string, hoyInicio: number, ayerInicio: numbe
   return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" }) +
     " " + formatearHora(iso);
 }
+
+export function tiempoRelativo(iso: string): string {
+  const minutos = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutos < 1) return "Hace un momento";
+  if (minutos < 60) return `Hace ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `Hace ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return "Ayer";
+  if (dias < 7) return `Hace ${dias} días`;
+  return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" });
+}

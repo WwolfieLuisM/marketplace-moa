@@ -192,26 +192,37 @@ Checkpoint 3 aprobado + páginas públicas funcionando contra el backend de prod
   `/vendedor/perfil`. El CI viaja al backend pero NUNCA se muestra en UI.
   Tras enviar: "Tu solicitud fue enviada, un administrador la revisará."
 - `/vendedor/perfil` (`app/vendedor/perfil/`): `GET /vendedores/me` +
-  `GET /vendedores/me/publicaciones`. Muestra licencia/suscripción (badges
-  colored), tipo, horario, dirección, contadores demo (5 día / 10 total con
+  `GET /vendedores/me/publicaciones`. Muestra licencia/suscripciA3n (badges
+  colored), tipo, horario, direcciA3n, contadores demo (5 dA-a / 10 total con
   restantes), fechas (demoTerminaEn / suscripcionVenceEn / exento) y aviso
-  si alcanzó el límite o está pendiente/rechazado. Lista de publicaciones
+  si alcanzA3 el lA-mite o estA� pendiente/rechazado. Lista de publicaciones
   con acciones por producto (`PATCH /publicaciones/:px/productos/:pr` con
-  `estado: pausado|activo|vendido`) y eliminar publicación
+  `estado: pausado|activo|vendido`) y eliminar publicaciA3n
   (`DELETE /publicaciones/:id`, soft-delete, confirm nativo). Las publicadas
   eliminadas se ven con badge `eliminado` sin acciones ni link al feed.
+- Favoritos (`backend/src/modules/favoritos/` + `frontend/app/favoritos/`,
+  `frontend/lib/favoritos.ts`): modelo `Favorito` (tabla `favoritos`,
+  `@@unique(userId,productoId)`) con rutas propias:
+  `GET /favoritos` (productos con fotos url + publicacion/vendedor),
+  `GET /favoritos/ids`, `POST /favoritos {productoId}` (upsert),
+  `DELETE /favoritos/:productoId`; todas `requireAuth`. Frontend:
+  `useFavoritos()` carga ids con sesiA3n y hace toggle optimista; el corazA3n
+  va por producto en `ProductCard` (invitado �+' `/login`). La tarjeta ademA�s
+  muestra badge Disponible/Agotado y tiempo relativo (`lib/fecha.tiempoRelativo`).
+- `MobileNav` (`frontend/components/MobileNav.tsx`): barra inferior fija sA3lo
+  en mA3vil (`md:hidden`) con Inicio/Buscar/FAB Publicar/Guardados/Perfil;
+  se integra en `app/layout.tsx` para todas las rutas salvo login/registro/
+  admin. Buscar navega a `/feed?buscar=1` (el feed enfoca el input).
 
 ## Pendientes
 
-- Backend (cola del push conjunto): `GET /vendedores/me/publicaciones`
-  (deploy pendiente en Render, ya probado local: crea→pausa→activa→borra OK).
-- `/vendedor/[id]` (requiere endpoint público nuevo; hoy `GET /vendedores/:id`
-  es solo admin); `/admin/*`; `/perfil`; `/favoritos`.
+- Backend (cola del push conjunto, sin desplegar en Render): tweak
+  `detallePublico id:true`, `GET /vendedores/me/publicaciones` y módulo
+  `favoritos`.
+- `/vendedor/[id]` (requiere endpoint pA�blico nuevo; hoy `GET /vendedores/:id`
+  es solo admin); `/admin/*`; `/perfil`.
 - Borrar `frontend/prototipo-mensajes.html` (ya migrado); pendiente también
   `prototipo-login.html` y `prototipo-feed.html` (ya migrados).
-- Ajustes de responsive móvil que surjan al probar en el teléfono.
-- Deploy a Cloudflare Pages al final (crear proyecto, setear las 2 env vars y
-  agregar el dominio al OAuth client de Google).
 - Ajustes de responsive móvil que surjan al probar en el teléfono.
 - Deploy a Cloudflare Pages al final (crear proyecto, setear las 2 env vars y
   agregar el dominio al OAuth client de Google).

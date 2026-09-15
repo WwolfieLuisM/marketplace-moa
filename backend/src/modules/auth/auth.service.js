@@ -158,4 +158,39 @@ async function me(userId) {
   return publicUser(user);
 }
 
-export default { register, login, googleLogin, refresh, me };
+// Actualiza solo datos editables del perfil (nombre, apellidos, teléfono y
+// reparto). El email o la contraseña NO se cambian por aquí, y el CI jamás.
+async function actualizarUsuario({ userId, datos }) {
+  const { nombre, apellidos, telefono, reparto } = datos || {};
+  if (!nombre?.trim() || !apellidos?.trim()) {
+    throw Object.assign(new Error("Faltan nombre o apellidos"), { status: 400 });
+  }
+
+  const telefonoNuevo =
+    typeof telefono === "string" && telefono.trim() ? telefono.trim() : null;
+  if (telefonoNuevo) {
+    const existe = await prisma.user.findFirst({
+      where: { telefono: telefonoNuevo, id: { not: userId } },
+      select: { id: true },
+    });
+    if (existe) {
+      throw Object.assign(new Error("Ya existe una cuenta con ese teléfono"), { status: 409 });
+    }
+  }
+
+  const repartoNuevo =
+    typeof reparto === "string" && reparto.trim() ? reparto.trim() : null;
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      nombre: nombre.trim(),
+      apellidos: apellidos.trim(),
+      telefono: telefonoNuevo,
+      reparto: repartoNuevo,
+    },
+  });
+  return publicUser(user);
+}
+
+export default { register, login, googleLogin, refresh, me, actualizarUsuario };

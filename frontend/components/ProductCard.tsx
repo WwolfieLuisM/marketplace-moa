@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { FeedPublicacion } from "@/lib/types";
-import { IconBox, IconLocation } from "./icons";
+import { useRouter } from "next/navigation";
+import type { FeedPublicacion, Producto } from "@/lib/types";
+import { tiempoRelativo } from "@/lib/fecha";
+import { IconBox, IconHeart, IconLocation } from "./icons";
 
 function nombreVendedor(pub: FeedPublicacion) {
   if (!pub.vendedor?.user) return "Vendedor";
@@ -17,14 +19,40 @@ function fotoPrincipal(pub: FeedPublicacion) {
   return null;
 }
 
+function BadgeDisponible({ producto }: { producto: Producto }) {
+  const disponible = producto.estado === "activo" && producto.cantidad > 0;
+  return (
+    <span
+      className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${
+        disponible ? "text-success" : "text-slate-muted"
+      }`}
+    >
+      {disponible ? "Disponible" : "Agotado"}
+    </span>
+  );
+}
+
 export default function ProductCard({
   publicacion,
   logueado,
+  esFavorito,
+  onToggleFavorito,
 }: {
   publicacion: FeedPublicacion;
   logueado: boolean;
+  esFavorito?: (productoId: string) => boolean;
+  onToggleFavorito?: (productoId: string) => void;
 }) {
+  const router = useRouter();
   const foto = fotoPrincipal(publicacion);
+
+  function toggleFavorito(productoId: string) {
+    if (!logueado) {
+      router.push("/login");
+      return;
+    }
+    onToggleFavorito?.(productoId);
+  }
 
   return (
     <article className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
@@ -50,21 +78,51 @@ export default function ProductCard({
             {publicacion.reparto || "—"}
           </span>
         </div>
-        <p className="mb-3 text-[13px] text-slate-muted">{nombreVendedor(publicacion)}</p>
+        <p className="mb-3 flex items-center gap-1.5 text-[13px] text-slate-muted">
+          <span className="truncate">{nombreVendedor(publicacion)}</span>
+          <span className="text-slate-300">·</span>
+          <span className="shrink-0">{tiempoRelativo(publicacion.creadoEn)}</span>
+        </p>
 
         <ul className="mb-4 flex flex-col gap-2">
           {publicacion.productos.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-lg bg-surface px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg bg-surface px-3 py-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-ink">{p.nombre}</p>
+                <p className="flex items-center gap-1.5">
+                  <span className="truncate text-[13px] font-semibold text-ink">{p.nombre}</span>
+                  <BadgeDisponible producto={p} />
+                </p>
                 {p.categoria && (
                   <p className="text-[11px] text-slate-muted">{p.categoria.nombre}</p>
                 )}
               </div>
-              <span className="shrink-0 text-[13px] font-bold text-brand">{p.precio} CUP</span>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="text-[13px] font-bold text-brand">{p.precio} CUP</span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleFavorito(p.id);
+                  }}
+                  aria-label={
+                    esFavorito?.(p.id) ? "Quitar de guardados" : "Guardar en favoritos"
+                  }
+                  aria-pressed={esFavorito?.(p.id) ?? false}
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                    esFavorito?.(p.id)
+                      ? "text-brand"
+                      : "text-slate-400 hover:text-brand"
+                  }`}
+                >
+                  <IconHeart
+                    className="h-[17px] w-[17px]"
+                    fill={esFavorito?.(p.id) ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -76,21 +134,12 @@ export default function ProductCard({
           >
             Ver
           </Link>
-          {logueado ? (
-            <Link
-              href={`/mensajes?publicacion=${publicacion.id}`}
-              className="flex-1 rounded-[10px] bg-brand px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-brand-dark"
-            >
-              Contactar vendedor
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="flex-1 rounded-[10px] bg-brand px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-brand-dark"
-            >
-              Contactar vendedor
-            </Link>
-          )}
+          <Link
+            href={logueado ? `/mensajes?publicacion=${publicacion.id}` : "/login"}
+            className="flex-1 rounded-[10px] bg-brand px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-brand-dark"
+          >
+            Contactar vendedor
+          </Link>
         </div>
       </div>
     </article>

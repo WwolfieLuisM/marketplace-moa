@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/lib/auth";
+import MobileNav from "@/components/MobileNav";
 
 export const metadata: Metadata = {
   title: "Marketplace Moa",
@@ -13,7 +14,10 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="bg-surface text-ink">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <MobileNav />
+        </AuthProvider>
       </body>
     </html>
   );

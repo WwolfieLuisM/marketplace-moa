@@ -84,4 +84,14 @@ router.get("/me", requireAuth, async (req, res, next) => {
   }
 });
 
+router.patch("/me", requireAuth, async (req, res, next) => {
+  try {
+    res.json({
+      user: await authService.actualizarUsuario({ userId: req.user.sub, datos: req.body }),
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

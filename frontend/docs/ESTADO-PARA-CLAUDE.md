@@ -17,7 +17,9 @@ App de marketplace local para Moa (Cuba): vendedores publican productos (hasta 3
 - **Privacidad**: el número de CI viaja al backend al solicitar ser vendedor, pero NUNCA se muestra ni se edita en UI.
 
 ## Estado actual
-Repos: https://github.com/WwolfieLuisM/marketplace-moa. 7 commits LOCALES sin push (push conjunto al final). GitHub main = `61e8706`. Commit más reciente: `72b13df`.
+Repos: https://github.com/WwolfieLuisM/marketplace-moa. GitHub main = `1ebed86`
+(7 commits pusheados: feed, login, registro, mensajes, publicaciones nueva y
+detalle, vendedor, docs). Trabajo local sin commit aun: favoritos + nav movil.
 
 Construido y verificado (frontend en `frontend/`):
 - Checkpoint 3

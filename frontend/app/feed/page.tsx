@@ -1,46 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import ErrorBanner from "@/components/ErrorBanner";
 import { IconBox, IconSearch } from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useFavoritos } from "@/lib/favoritos";
+import { sintetizarPublicacion } from "@/lib/feed";
 import { REPARTOS_MOA } from "@/lib/types";
 import type { Categoria, FeedPublicacion, ProductoResultado } from "@/lib/types";
 
 const PAGE_SIZE = 20;
-
-function sintetizarPublicacion(r: ProductoResultado): FeedPublicacion {
-  const pub = r.publicacion;
-  return {
-    id: pub.id,
-    titulo: pub.titulo,
-    reparto: pub.reparto ?? null,
-    conDomicilio: pub.conDomicilio,
-    telefonoFijo: pub.telefonoFijo ?? null,
-    telefonoMovil: pub.telefonoMovil ?? null,
-    estado: pub.estado,
-    creadoEn: pub.creadoEn,
-    score: r.score,
-    vendedor: pub.vendedor ?? null,
-    productos: [
-      {
-        id: r.id,
-        publicacionId: r.publicacionId,
-        nombre: r.nombre,
-        descripcion: r.descripcion,
-        precio: r.precio,
-        cantidad: r.cantidad,
-        categoria: r.categoria ?? null,
-        orden: r.orden,
-        estado: r.estado,
-        fotos: r.fotos ?? [],
-      },
-    ],
-  };
-}
 
 function unir(prev: FeedPublicacion[], nuevos: FeedPublicacion[]) {
   const mapa = new Map(prev.map((p) => [p.id, p]));
@@ -50,6 +23,9 @@ function unir(prev: FeedPublicacion[], nuevos: FeedPublicacion[]) {
 
 export default function FeedPage() {
   const { usuario } = useAuth();
+  const { esFavorito, toggle } = useFavoritos();
+  const searchParams = useSearchParams();
+  const buscarRef = useRef<HTMLInputElement>(null);
 
   const [publicaciones, setPublicaciones] = useState<FeedPublicacion[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -129,6 +105,14 @@ export default function FeedPage() {
       .catch(() => setCategorias([]));
   }, []);
 
+  // la ruta viene con ?buscar=1 desde el nav móvil: enfoca y abre el buscador
+  useEffect(() => {
+    if (searchParams.get("buscar")) {
+      const t = setTimeout(() => buscarRef.current?.focus(), 250);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams]);
+
   function cargarMas() {
     const n = pagina + 1;
     setPagina(n);
@@ -157,6 +141,7 @@ export default function FeedPage() {
           <div className="relative">
             <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
+              ref={buscarRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar producto (ej. arroz, pollo, medicamento)"
@@ -217,7 +202,13 @@ export default function FeedPage() {
             <>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {publicaciones.map((pub) => (
-                  <ProductCard key={pub.id} publicacion={pub} logueado={!!usuario} />
+                  <ProductCard
+                    key={pub.id}
+                    publicacion={pub}
+                    logueado={!!usuario}
+                    esFavorito={esFavorito}
+                    onToggleFavorito={(id) => void toggle(id)}
+                  />
                 ))}
               </div>
               {hayMas && (
