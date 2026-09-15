@@ -8,6 +8,7 @@ import feedRoutes from "./modules/feed/feed.routes.js";
 import mensajesRoutes from "./modules/mensajes/mensajes.routes.js";
 import notificacionesRoutes from "./modules/notificaciones/notificaciones.routes.js";
 import favoritosRoutes from "./modules/favoritos/favoritos.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
 import jobRoutes from "./modules/jobs/jobs.routes.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import { habilitado as firebaseHabilitado } from "./lib/firebase.js";
@@ -38,6 +39,7 @@ app.use("/feed", feedRoutes);
 app.use("/mensajes", mensajesRoutes);
 app.use("/notificaciones", notificacionesRoutes);
 app.use("/favoritos", favoritosRoutes);
+app.use("/admin", adminRoutes);
 app.use("/admin/jobs", jobRoutes);
 
 app.use(notFoundHandler);
