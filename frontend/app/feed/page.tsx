@@ -1,11 +1,24 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import type { ComponentType } from "react";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import ErrorBanner from "@/components/ErrorBanner";
-import { IconBox, IconSearch } from "@/components/icons";
+import {
+  IconAlimento,
+  IconBebida,
+  IconBelleza,
+  IconBox,
+  IconHogar,
+  IconRopa,
+  IconSearch,
+  IconServicios,
+  IconTecnologia,
+} from "@/components/icons";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFavoritos } from "@/lib/favoritos";
@@ -14,6 +27,24 @@ import { REPARTOS_MOA } from "@/lib/types";
 import type { Categoria, FeedPublicacion, ProductoResultado } from "@/lib/types";
 
 const PAGE_SIZE = 20;
+
+const ICONOS_CATEGORIA: Record<string, ComponentType<{ className?: string }>> = {
+  Alimentos: IconAlimento,
+  Bebidas: IconBebida,
+  "Ropa y calzado": IconRopa,
+  "Hogar y muebles": IconHogar,
+  Tecnología: IconTecnologia,
+  "Belleza y salud": IconBelleza,
+  Servicios: IconServicios,
+  Otros: IconBox,
+};
+
+const OPCIONES_ORDEN = [
+  { valor: "relevancia", etiqueta: "Relevancia" },
+  { valor: "recientes", etiqueta: "Más recientes" },
+  { valor: "menor_precio", etiqueta: "Menor precio" },
+  { valor: "mayor_precio", etiqueta: "Mayor precio" },
+];
 
 function unir(prev: FeedPublicacion[], nuevos: FeedPublicacion[]) {
   const mapa = new Map(prev.map((p) => [p.id, p]));
@@ -33,6 +64,7 @@ export default function FeedPage() {
   const [qAplicada, setQAplicada] = useState("");
   const [reparto, setReparto] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
+  const [orden, setOrden] = useState("relevancia");
   const [vista, setVista] = useState<"feed" | "busqueda">("feed");
   const [pagina, setPagina] = useState(1);
   const [hayMas, setHayMas] = useState(true);
@@ -58,6 +90,7 @@ export default function FeedPage() {
           const params = new URLSearchParams();
           if (reparto) params.set("reparto", reparto);
           if (categoriaId) params.set("categoria", categoriaId);
+          if (orden) params.set("orden", orden);
           params.set("page", String(n));
           const data = await api.get<{ feed: FeedPublicacion[]; page: number }>(`/feed?${params}`);
           if (id !== reqId.current) return;
@@ -75,7 +108,7 @@ export default function FeedPage() {
         }
       }
     },
-    [vista, qAplicada, reparto, categoriaId]
+    [vista, qAplicada, reparto, categoriaId, orden]
   );
 
   // búsqueda con debounce: escribe -> consulta /feed/productos ; vacío -> vuelve al feed
@@ -96,7 +129,7 @@ export default function FeedPage() {
     setPagina(1);
     setHayMas(true);
     void cargarPagina(1, false);
-  }, [vista, qAplicada, reparto, categoriaId, cargarPagina]);
+  }, [vista, qAplicada, reparto, categoriaId, orden, cargarPagina]);
 
   useEffect(() => {
     api
@@ -137,7 +170,7 @@ export default function FeedPage() {
           Publicaciones de comercios y vendedores del municipio.
         </p>
 
-        <div className="mt-6 space-y-3">
+<div className="mt-6 space-y-3">
           <div className="relative">
             <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
@@ -147,6 +180,36 @@ export default function FeedPage() {
               placeholder="Buscar producto (ej. arroz, pollo, medicamento)"
               className="h-12 w-full rounded-xl border border-line bg-white pl-11 pr-4 text-[14px] text-ink outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-orange-100"
             />
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {categorias
+              .filter((c) => c.nombre !== "Test Job")
+              .map((c) => {
+                const Icono = ICONOS_CATEGORIA[c.nombre] || IconBox;
+                const activa = categoriaId === String(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => aplicarFiltro("categoria", activa ? "" : String(c.id))}
+                    className={`flex h-[70px] w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border transition-colors ${
+                      activa
+                        ? "border-brand bg-brand text-white"
+                        : "border-line bg-white text-slate-600 hover:border-slate-300"
+                    }`}
+                  >
+                    <Icono className="h-6 w-6" />
+                    <span
+                      className={`w-full truncate px-1 text-center text-[11px] font-semibold ${
+                        activa ? "text-white" : "text-slate-600"
+                      }`}
+                    >
+                      {c.nombre}
+                    </span>
+                  </button>
+                );
+              })}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -168,12 +231,27 @@ export default function FeedPage() {
               className="h-11 rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand"
             >
               <option value="">Todas las categorías</option>
-              {categorias.map((c) => (
-                <option key={c.id} value={String(c.id)}>
-                  {c.nombre}
-                </option>
-              ))}
+              {categorias
+                .filter((c) => c.nombre !== "Test Job")
+                .map((c) => (
+                  <option key={c.id} value={String(c.id)}>
+                    {c.nombre}
+                  </option>
+                ))}
             </select>
+            {vista !== "busqueda" && (
+              <select
+                value={orden}
+                onChange={(e) => setOrden(e.target.value)}
+                className="h-11 rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand"
+              >
+                {OPCIONES_ORDEN.map((o) => (
+                  <option key={o.valor} value={o.valor}>
+                    Ordenar: {o.etiqueta}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 

@@ -19,9 +19,10 @@ App de marketplace local para Moa (Cuba): vendedores publican productos (hasta 3
 ## Estado actual
 Repos: https://github.com/WwolfieLuisM/marketplace-moa. GitHub main = `1ebed86`
 (7 commits pusheados: feed, login, registro, mensajes, publicaciones nueva y
-detalle, vendedor, docs). Local sin push (3 commits): `9a850fd` favoritos +
+detalle, vendedor, docs). Local sin push (4 commits): `9a850fd` favoritos +
 nav móvil + `/perfil` + `PATCH /auth/me`; `9258afb` `/admin` (resumen +
-vendedores); docs.
+vendedores); `ed71b35` docs; uno nuevo pendiente de hacer (tiles+orden feed +
+fix reparto + docs actualizado).
 
 Construido y verificado (frontend en `frontend/`):
 - Checkpoint 3
@@ -37,14 +38,16 @@ Construido y verificado (frontend en `frontend/`):
 - Nav móvil inferior (`MobileNav`) — Inicio/Buscar/FAB Publicar/Guardados/Perfil, oculta en login/registro/admin
 - `/perfil` — editar nombre, apellidos, teléfono y reparto (NUNCA el CI) vía `PATCH /auth/me`; email de solo lectura
 - `/admin` — dashboard con contadores (`GET /admin/resumen`); `/admin/vendedores` — filtros por estado y aprobar (demo/exento) o rechazar con modal
+- `/feed` — tiles horizontales de categorías con íconos SVG (mapa `ICONOS_CATEGORIA` por nombre; "Test Job" oculto en UI) + select de orden (`relevancia`/`recientes`/`menor_precio`/`mayor_precio`, solo en vista feed). `export const dynamic = "force-dynamic"` para que al volver desde otra página SIEMPRE re-ejecute los fetch (sin esto, Next restaura la página prerenderizada estática y queda vacía hasta recargar)
 
 Cambios backend commiteados pero NO desplegados aún en Render (van en el push conjunto):
 1. `publicaciones.service.js` `detallePublico`: añade `id:true` al select del user del vendedor
 2. Nuevo endpoint `GET /vendedores/me/publicaciones` (solo el dueño; lista todas sus publicaciones con productos/fotos) — `vendedor.routes.js` + `vendedor.service.js` (`misPublicaciones`)
+3. `feed.service.js` `feed()` acepta `orden` (recientes / menor_precio / mayor_precio, default relevancia). El ORDER BY se inyecta desde un mapa cerrado y el resto van como parámetros para NO romper el orden (prisma `$queryRaw` no interpolaba bien el ORDER BY; ahora usa `$queryRawUnsafe` con `$1..$5`). Importante: **el reparto del usuario logueado ya NO filtra el feed por defecto** (el select "Todos los repartos" = ver TODO); solo filtra si el usuario elige un reparto en el UI. El reparto del usuario solo alimenta el score de relevancia. `feed.routes.js` mapea `orden` y pasa ambos repartos.
 
 ## Backend: endpoints útiles (API prod / local :3001)
 - Auth: `POST /auth/register {email,...}` · `POST /auth/login {cuenta,password}` · `POST /auth/google {idToken}` · `POST /auth/refresh` · `POST /auth/logout`
-- `GET /feed` (feed con score) · `GET /feed/categorias` · `GET /feed/productos?q=`
+- `GET /feed` (feed con score, params `reparto`, `categoria`, `orden`, `page`) · `GET /feed/categorias` · `GET /feed/productos?q=`
 - `GET /publicaciones/:id` (detalle público; `vendedor.userId` SIEMPRE presente; `precio` viene como string)
 - `POST /publicaciones` `{titulo, reparto, conDomicilio?, telefonoFijo?, telefonoMovil?, productos:[{nombre, descripcion, precio, cantidad, categoriaId, fotos?[]}]}` — requiere vendedor aprobado + suscripción demo/activo/exento
 - `PATCH /publicaciones/:px/productos/:pr {estado}` (pausado|activo|vendido — owner/admin)
@@ -65,8 +68,7 @@ Cambios backend commiteados pero NO desplegados aún en Render (van en el push c
 - Verificaciones: `cd frontend && npx tsc --noEmit`; tras cambios relevantes probar con Invoke-RestMethod contra la API.
 
 ## Qué falta (siguiente plan)
-1. Tiles de categorías con íconos + selector de orden (mas recientes / menor precio / mayor precio) en el feed.
-2. `/vendedor/[id]` — perfil público del vendedor con sus publicaciones activas. **Bloqueante**: hoy `GET /vendedores/:id` es admin-only; hace falta un endpoint público nuevo (o posponer).
-3. Borrar prototipos HTML migrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`).
-4. Responsive móvil al probar en teléfono.
-5. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google; redeploy Render (favoritos, `PATCH /auth/me`, `/admin/resumen`). Push conjunto de los commits locales (3)
+1. `/vendedor/[id]` — perfil público del vendedor con sus publicaciones activas. **Bloqueante**: hoy `GET /vendedores/:id` es admin-only; hace falta un endpoint público nuevo (o posponer).
+2. Borrar prototipos HTML migrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`).
+3. Responsive móvil al probar en teléfono.
+4. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google; redeploy Render (favoritos, `PATCH /auth/me`, `/admin/resumen`, tiles+orden feed, fix reparto). Push conjunto de los commits locales (favoritos/perfil/admin + tiles+orden + docs). **Antes del push: restaurar `.env.local` a `NEXT_PUBLIC_API_URL=https://moa-api-8y3i.onrender.com`**.

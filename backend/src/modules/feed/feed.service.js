@@ -7,11 +7,21 @@ const PAGE_SIZE = 20;
 // factor_suscripcion: activo/exento=1.0, demo=0.6, vencido(en gracia)=0.2
 // factor_recencia: 1 / (1 + horas_desde_publicado/24)
 // factor_reparto: mismo reparto del usuario=1.0, mismo municipio=0.6, otro=0.3
-async function feed({ repartoUsuario, repartoFiltro, categoriaId, page = 1 }) {
-  const offset = (Math.max(1, Number(page)) - 1) * PAGE_SIZE;
-  const repartoRef = repartoFiltro || repartoUsuario;
+const ORDER_SQL = {
+  relevancia: "score DESC, p.creado_en DESC",
+  recientes: "p.creado_en DESC",
+  menor_precio: `(SELECT MIN(pr.precio) FROM productos pr WHERE pr.publicacion_id = p.id AND pr.estado = 'activo') ASC NULLS LAST`,
+  mayor_precio: `(SELECT MAX(pr.precio) FROM productos pr WHERE pr.publicacion_id = p.id AND pr.estado = 'activo') DESC NULLS LAST`,
+};
 
-  const rows = await prisma.$queryRaw`
+async function feed({ repartoUsuario, repartoFiltro, categoriaId, orden, page = 1 }) {
+  const offset = (Math.max(1, Number(page)) - 1) * PAGE_SIZE;
+  const repartoSeleccionado = repartoFiltro?.trim() ? repartoFiltro.trim() : null;
+  const repartoRef = repartoFiltro?.trim() ? repartoFiltro.trim() : repartoUsuario || null;
+  const ordenKey = ORDER_SQL[orden] ? orden : "relevancia";
+
+  const rows = await prisma.$queryRawUnsafe(
+    `
     SELECT p.id, p.titulo, p.reparto, p.creado_en, vp.estado_suscripcion,
            p.con_domicilio,
            0.5 * (CASE
@@ -21,22 +31,28 @@ async function feed({ repartoUsuario, repartoFiltro, categoriaId, page = 1 }) {
              ELSE 0.0 END)
          + 0.35 * (1 / (1 + (EXTRACT(EPOCH FROM (now() - p.creado_en)) / 3600) / 24))
          + 0.15 * (CASE
-             WHEN ${repartoRef ?? null}::text IS NULL THEN 0.6
-             WHEN p.reparto = ${repartoRef ?? null}::text THEN 1.0
+             WHEN $2::text IS NULL THEN 0.6
+             WHEN p.reparto = $2::text THEN 1.0
              ELSE 0.3 END)
            AS score
     FROM publicaciones p
     JOIN vendedor_perfil vp ON vp.id = p.vendedor_id
     WHERE p.estado = 'activo'
       AND vp.estado_suscripcion IN ('demo', 'activo', 'exento')
-      AND (${repartoFiltro ?? null}::text IS NULL OR p.reparto = ${repartoFiltro ?? null}::text)
-      AND (${categoriaId ? Number(categoriaId) : null}::int IS NULL OR EXISTS (
+      AND ($1::text IS NULL OR p.reparto = $1::text)
+      AND ($3::int IS NULL OR EXISTS (
         SELECT 1 FROM productos pr WHERE pr.publicacion_id = p.id
-          AND pr.estado = 'activo' AND pr.categoria_id = ${categoriaId ? Number(categoriaId) : null}::int
+          AND pr.estado = 'activo' AND pr.categoria_id = $3::int
       ))
-    ORDER BY score DESC, p.creado_en DESC
-    LIMIT ${PAGE_SIZE} OFFSET ${offset}
-  `;
+    ORDER BY ${ORDER_SQL[ordenKey]}
+    LIMIT $4 OFFSET $5
+    `,
+    repartoSeleccionado,
+    repartoRef,
+    categoriaId ? Number(categoriaId) : null,
+    PAGE_SIZE,
+    offset
+  );
 
   const ids = rows.map((r) => r.id);
   if (ids.length === 0) {
@@ -58,10 +74,18 @@ async function feed({ repartoUsuario, repartoFiltro, categoriaId, page = 1 }) {
     },
   });
 
-  const scorePorId = Object.fromEntries(rows.map((r) => [r.id, Number(r.score)]));
+  if (ordenKey === "relevancia") {
+    const scorePorId = Object.fromEntries(rows.map((r) => [r.id, Number(r.score)]));
+    return publicaciones
+      .map((pub) => ({ ...pub, score: scorePorId[pub.id] ?? 0 }))
+      .sort((a, b) => b.score - a.score);
+  }
+
+  // Para orden fijo (precio/recientes) respetamos el orden devuelto por la query raw.
+  const indice = Object.fromEntries(rows.map((r, i) => [r.id, i]));
   return publicaciones
-    .map((pub) => ({ ...pub, score: scorePorId[pub.id] ?? 0 }))
-    .sort((a, b) => b.score - a.score);
+    .map((pub) => ({ ...pub, score: 0 }))
+    .sort((a, b) => indice[a.id] - indice[b.id]);
 }
 
 // Búsqueda por trigramas con el índice GIN (pg_trgm).

@@ -45,12 +45,13 @@ router.get("/productos", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const { reparto, categoria, page } = req.query;
+    const { reparto, categoria, orden, page } = req.query;
     const repartoUsuario = await leerRepartoUsuario(req);
     const publicaciones = await feedService.feed({
       repartoUsuario,
       repartoFiltro: reparto,
       categoriaId: categoria,
+      orden,
       page,
     });
     res.json({

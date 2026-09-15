@@ -249,3 +249,77 @@ export function IconLogout(props: IconProps) {
     </svg>
   );
 }
+
+export function IconAlimento(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 7.5h12l-1 7H5l-1-7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M10 7.5v7M10 3.5c1.2 1 .7 2.4 0 3.5-1.2-1-.7-2.4 0-3.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconBebida(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M6.5 3.5h7V6c0 2.5-1 4.5-3.5 5.5-2.5-1-3.5-3-3.5-5.5V3.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M10 11.5v3M7.5 16.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconRopa(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path
+        d="M4.5 3.5L7 6 8.5 4.5c1 1 2 1 3 0L13 6l2.5-2.5c.8.9.5 1.6 0 2.2l-.8 1.3H9.5v8h-3l-.4-8.3-1.3-1.2c-.5-.6-.8-1.3 0-2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M6.5 13.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconHogar(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 9.5h14l-1.5 7h-11l-1.5-7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M5.5 9.5C5.5 6.5 7 5 10 5s4.5 1.5 4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconTecnologia(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M7 5l1.5-1.5h3L13 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 5v5h6V5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M4 10h12v4H4v-4ZM7 17c0-1.2.6-2 2-2h2c1.4 0 2 .8 2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconBelleza(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path
+        d="M10 16.5c-4-2.2-6-4.9-6-7.8A3.2 3.2 0 0110 6.8a3.2 3.2 0 016 1.9c0 2.9-2 5.6-6 7.8Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M5.5 12.5c-1.8.8-2.5 1.8-2.5 3 0 1 .6 1.5 1.5 1.5 1 .5 2.8 0 4-1.5M14.5 12.5c1.5.7 2.5 1.5 2.5 2.5 0 .5-.5 1-1.5 1-1 0-1.5-1-1-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconServicios(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M5.5 8.5H14.5V14a2.5 2.5 0 01-2.5 2.5H8A2.5 2.5 0 015.5 14V8.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 8.5V6.5a2 2 0 114 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
