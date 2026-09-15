@@ -19,7 +19,9 @@ App de marketplace local para Moa (Cuba): vendedores publican productos (hasta 3
 ## Estado actual
 Repos: https://github.com/WwolfieLuisM/marketplace-moa. GitHub main = `1ebed86`
 (7 commits pusheados: feed, login, registro, mensajes, publicaciones nueva y
-detalle, vendedor, docs). Trabajo local sin commit aun: favoritos + nav movil.
+detalle, vendedor, docs). Local sin push (3 commits): `9a850fd` favoritos +
+nav móvil + `/perfil` + `PATCH /auth/me`; `9258afb` `/admin` (resumen +
+vendedores); docs.
 
 Construido y verificado (frontend en `frontend/`):
 - Checkpoint 3
@@ -31,6 +33,10 @@ Construido y verificado (frontend en `frontend/`):
 - `/publicaciones/[id]` — detalle público con galería, teléfonos, vendedor, zonas de domicilio
 - `/vendedor/solicitud` — form solicitud (tipo individual/TCP/empresa_estatal, nombre, apellidos, CI, reparto; negocio: nombreNegocio*, categoría, horario, dirección)
 - `/vendedor/perfil` — estado licencia/suscripción, contadores demo, lista de publicaciones propias con Pausar/Activar/Vendido/Eliminar
+- `/favoritos` — grid de productos guardados con ProductCard y botón quitar (toggle optimista con rollback)
+- Nav móvil inferior (`MobileNav`) — Inicio/Buscar/FAB Publicar/Guardados/Perfil, oculta en login/registro/admin
+- `/perfil` — editar nombre, apellidos, teléfono y reparto (NUNCA el CI) vía `PATCH /auth/me`; email de solo lectura
+- `/admin` — dashboard con contadores (`GET /admin/resumen`); `/admin/vendedores` — filtros por estado y aprobar (demo/exento) o rechazar con modal
 
 Cambios backend commiteados pero NO desplegados aún en Render (van en el push conjunto):
 1. `publicaciones.service.js` `detallePublico`: añade `id:true` al select del user del vendedor
@@ -59,10 +65,8 @@ Cambios backend commiteados pero NO desplegados aún en Render (van en el push c
 - Verificaciones: `cd frontend && npx tsc --noEmit`; tras cambios relevantes probar con Invoke-RestMethod contra la API.
 
 ## Qué falta (siguiente plan)
-1. `/vendedor/[id]` — perfil público del vendedor con sus publicaciones activas. **Bloqueante**: hoy `GET /vendedores/:id` es admin-only; hace falta un endpoint público nuevo (o posponer).
-2. `/admin/*` — protegido por rol `admin` (redirigir si el usuario no es admin): dashboard con contadores (pendientes, por vencer, reportes), `/admin/vendedores` tabla con aprobar (demo/exento), rechazar, marcar pagado; `/admin/reportes` (marcar revisado). El usuario admin de prueba es rosal.
-3. `/perfil` — editar nombre, teléfono, reparto (NUNCA el CI).
-4. `/favoritos` — grid de productos guardados con ProductCard y botón quitar.
-5. Borrar prototipos HTML migrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`).
-6. Responsive móvil al probar en teléfono.
-7. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google. Luego push conjunto de todos los commits locales.
+1. Tiles de categorías con íconos + selector de orden (mas recientes / menor precio / mayor precio) en el feed.
+2. `/vendedor/[id]` — perfil público del vendedor con sus publicaciones activas. **Bloqueante**: hoy `GET /vendedores/:id` es admin-only; hace falta un endpoint público nuevo (o posponer).
+3. Borrar prototipos HTML migrados (`frontend/prototipo-login.html`, `prototipo-feed.html`, `prototipo-mensajes.html`).
+4. Responsive móvil al probar en teléfono.
+5. Deploy Cloudflare Pages al final + dominio en el OAuth client de Google; redeploy Render (favoritos, `PATCH /auth/me`, `/admin/resumen`). Push conjunto de los commits locales (3)
