@@ -32,7 +32,7 @@ jobs:
 
       - name: Build con OpenNext
         working-directory: frontend
-        run: pnpm deploy
+        run: pnpm run deploy
         env:
           NEXT_PUBLIC_API_URL: https://moa-api-8y3i.onrender.com
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: 687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com
