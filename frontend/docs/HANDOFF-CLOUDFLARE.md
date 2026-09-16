@@ -1,95 +1,96 @@
-# HANDOFF — Deploy a Cloudflare con OpenNext (Next 15.5.25, Windows + pnpm)
+# HANDOFF — Deploy del frontend a Cloudflare (OpenNext vía CI)
 
-Rol para quien retome: hacer el deploy del frontend a Cloudflare. Trabajo ya hecho
-(hay un commit pusheado), el único paso pendiente es el build/deploy OpenNext.
+El frontend ya se despliega a Cloudflare **automáticamente por CI** (GitHub
+Actions en runner Ubuntu). Este doc es la referencia de mantenimiento: cómo
+funciona, cómo se dispara, cómo verificarlo y qué tocar cuando haya cambios.
 
-## Contexto
-- Repo: `https://github.com/WwolfieLuisM/marketplace-moa` (main = `5bbb97f`, todo pusheado).
-- Frontend: `C:\Users\rosal\Desktop\marketplace-moa\frontend`
-  (Next 15.5.25 App Router, React 19, Tailwind 4, TypeScript, **pnpm 12.4.1**).
-- Backend ya en prod (Render + Neon) y verificado. Este trabajo es SOLO frontend.
-- Objetivo original: "Cloudflare Pages". El CLI moderno de OpenNext despliega a
-  **Workers + assets estáticos** (`wrangler deploy`), no al Pages antiguo. Mismo
-  resultado práctico (hosting gratuito + custom domain).
+## Estado actual (RESUELTO y en producción)
+- **URL de producción:** https://moa-frontend.luisiking89.workers.dev (HTTP 200).
+- Deploy automático desde GitHub Actions con el workflow
+  `.github/workflows/deploy-frontend.yml`.
+- Último deploy OK: run `35060076852` en main (commit `6a675cc`).
+- El build local en **Windows falla** (esbuild + symlinks de pnpm), pero es
+  irrelevante: el deploy oficial es el de CI en Ubuntu, que funciona.
 
-## Estado actual (último intento de build)
-- `@opennextjs/cloudflare@1.20.6` y `wrangler@4.20.0` YA instalados (deps del
-  package.json, `pnpm ls` los muestra).
-- Creados: `open-next.config.ts`, `wrangler.jsonc`, y scripts `preview`/`deploy`
-  en package.json.
-- Run: `npx opennextjs-cloudflare build` — **falla en el paso de esbuild** al
-  empaquetar `.open-next/server-functions/default`:
-  `Cannot read directory "....node_modules/react": Access is denied` (igual para
-  react-dom y styled-jsx).
-- El build de Next en sí YA PASA: `✓ Compiled successfully`, `Generating static
-  pages (18/18)`.
+## Cómo funciona el deploy (CI)
+1. Se dispara en **push a `main`** con cambios bajo `frontend/**`, o de forma
+   manual desde **Actions → "Deploy frontend a Cloudflare" → Run workflow**.
+2. Runner `ubuntu-latest`, **Node 22** (wrangler 4.x exige ≥22; con Node 20 el
+   paso de deploy falla con "requires at least Node.js v22.0.0").
+3. `pnpm install --frozen-lockfile` (usa el `pnpm-lock.yaml` del repo).
+4. `pnpm run deploy` = `opennextjs-cloudflare build && opennextjs-cloudflare deploy`.
+   - Build en Ubuntu pasa siempre (los 18/18 estáticos + worker).
+   - El default `incrementalCache: "dummy"` no requiere R2 ("does not need
+     populating"), así que NO hace falta crear bucket.
+5. `wrangler deploy` usa el token del secret **`CLOUDFLARE_API_TOKEN`**.
 
-## Causa raíz confirmada del fallo actual
-- esbuild no puede leer los **symlinks** de pnpm que Next copia al standalone.
-- Se verificó con un probe: `node` lee esos directorios (`len 6`) tanto en
-  `.next/standalone/...` como en `.open-next/...`, pero **esbuild** falla solo en
-  la copia `.open-next` (probe: FAIL open-next, OK standalone). Ambos symlinks
-  tienen target `..\..\react@19.3.0\node_modules\react`.
-- Bug conocido: esbuild + Windows no sigue bien symlinks de directorio
-  sin `preserveSymlinks`. No hay flag fácil en OpenNext para eso.
+### Secrets de GitHub (configurados)
+| Secret | Uso |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Token de Cloudflare (template **Edit Cloudflare Workers**, Account+Zone resources = All, SIN filtro de IP porque los runners usan IPs dinámicas) |
+| `JOB_SECRET_KEY` | Job diario del backend (`revisar-suscripciones.yml`) — no tocar |
 
-## Historial de lo que ya se hizo (para no repetir)
-1. `package.json`: `next` pasó `^15.5.6` → `^15.5.25` (peer de OpenNext).
-2. `.npmrc` con `network-concurrency=1` + registry npmjs (fix crítico de esta red;
-   sin eso `pnpm install` no baja nada, error 10054).
-3. Instalación desde tarballs locales (`Desktop\cloudflare-1.20.6.tgz` y
-   `wrangler-4.20.0.tgz`) → luego `package.json` cambiado a rangos `^` normales.
-4. **Windows Developer Mode** habilitado (reg `AllowDevelopmentWithoutDevLicense=1`)
-   para que Next pueda crear symlinks (antes: `EPERM: symlink ... operation not
-   permitted`). REVERSIBLE: borrar esa clave.
-5. `next.config.ts`: `outputFileTracingRoot` pasó de `path.join(__dirname, "..")`
-   (repo root) a `__dirname` (frontend). Sin esto, el standalone quedaba anidado
-   bajo `frontend/` y OpenNext no encontraba `pages-manifest.json`.
-6. Fix de prerender: `useSearchParams()` sin Suspense rompía el build
-   (`app/feed/page.tsx` y `app/mensajes/page.tsx`). Se envolvió el contenido en
-   `<Suspense>`. `app/mensajes/[conversacionId]/page.tsx` usa useSearchParams pero
-   es ruta dinámica y NO dio error (no tocar).
+### Env vars del build (hardcodeadas en el workflow)
+- `NEXT_PUBLIC_API_URL=https://moa-api-8y3i.onrender.com`
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID=687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com`
 
-## Comandos útiles
+Son públicas (`NEXT_PUBLIC_*`), van en el paso "Build con OpenNext". Si cambian,
+editar el workflow.
+
+## Comandos útiles (mantenimiento)
 ```bash
-cd C:\Users\rosal\Desktop\marketplace-moa\frontend
-pnpm ls @opennextjs/cloudflare wrangler        # deps OK
-npx tsc --noEmit                               # limpio
-npx opennextjs-cloudflare build                # punto actual de falla
-npm run build                                   # next build puro (pasa)
+# Ver último run y su estado
+gh run list --repo WwolfieLuisM/marketplace-moa --workflow deploy-frontend.yml --limit 1
+gh run view <RUN_ID> --repo WwolfieLuisM/marketplace-moa
+
+# Ver el log del job / del build
+gh run view <RUN_ID> --repo WwolfieLuisM/marketplace-moa --log-failed
+
+# Re-disparar manualmente
+gh workflow run deploy-frontend.yml --repo WwolfieLuisM/marketplace-moa
+# (o desde el botón "Run workflow" en la pestaña Actions del repo)
 ```
 
-## Hipótesis / opciones para resolver el bloqueo (probar en orden)
-1. **`pnpm` con linker hoisted** (elimina el árbol `.pnpm/.../node_modules` con
-   symlinks): `.npmrc` → `node-linker=hoisted`, luego `pnpm install` y rebuild.
-   Puede acelerar y evitar el problema de symlinks. OJO: tarda (5-6 min por la red).
-2. **Reemplazar los symlinks por copias reales** en un postbuild script solo para
-   `.open-next/server-functions/default/node_modules/.pnpm/*/node_modules`
-   (reemplazar react/react-dom/styled-jsx/etc. con `Copy-Item -Recurse`). Hacky
-   pero posible.
-3. **Build del servidor en WSL/Linux** (OpenNext avisa que Windows "no está
-   soportado al 100%"). Si hay WSL disponible, clonar/montar y buildear ahí.
-4. **CI en GitHub Actions** con runner ubuntu: `pnpm install && pnpm deploy`
-   (wrangler login vía CLOUDFLARE_API_TOKEN secreto). Más robusto que pelear en
-   Windows.
+## Despliegue local (opcional, SOLO si el CI no estuviera disponible)
+Requiere Node 22:
+```bash
+cd frontend
+pnpm install --frozen-lockfile
+set CLOUDFLARE_API_TOKEN=<token> & pnpm run deploy   # seguro: usa tu token del dashboard
+# O con login interactivo:
+pnpm run preview   # simula local; pnpm run deploy   # sube de verdad
+```
+En Windows el build de OpenNext falla a mitad (esbuild + symlinks de pnpm:
+`Cannot read directory ".../node_modules/react": Access is denied`). No fue
+resuelto y ya no importa — el deploy oficial es por CI.
 
-## Después de que el build pase (siguientes pasos)
-1. `npx wrangler login` (abre navegador; requiere cuenta Cloudflare del usuario).
-2. `pnpm deploy` → despliega `moa-frontend` worker + assets.
-3. Crear R2 bucket para cache incremental si se desea ISR:
-   `npx wrangler r2 bucket create moa-frontend-opennext-cache` y añadirlo a
-   `wrangler.jsonc`.
-4. Env vars (secretos para wrangler):
-   - `NEXT_PUBLIC_API_URL=https://moa-api-8y3i.onrender.com`
-   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID=687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com`
-5. Custom domain → añadir en Google Cloud Console (Authorized JavaScript origins
-   + redirect URIs) para que funcione el login con Google desde el dominio final.
+## Fallo histórico del build local en Windows (referencia, no bloquea)
+- esbuild ♯ puede leer symlinks de directorio de pnpm solo en `.open-next` (probe:
+  node OK en ambos, esbuild FAIL solo en `.open-next`; standalone OK). Bug conocido.
+- No se intentaron las mitigaciones (node-linker=hoisted, postbuild con copias,
+  WSL) porque se eligió CI en Ubuntu (opción robusta, runner limpio).
+- **Windows Developer Mode** quedó habilitado (reg
+  `AllowDevelopmentWithoutDevLicense=1`) pata permitir symlinks de Next. No es
+  necesario ya; reversible borrando esa clave, pero no hacer daño dejarlo.
+
+## Próximos pasos pendientes
+1. **Google OAuth del dominio:** el login con Google desde
+   `https://moa-frontend.luisiking89.workers.dev` requiere registrar esa URL en
+   Google Cloud Console → proyecto del client `687233405771-...` → Credenciales →
+   editar el client → *Authorized JavaScript origins* y *redirect URIs*.
+2. (Opcional) R2 para ISR: crear bucket y añadir binding en `wrangler.jsonc`. La
+   app no usa `next/image` ni `revalidate`, así que no hace falta por ahora.
+3. (Opcional) Custom domain propio en vez del `*.workers.dev` — añadir zona/ruta
+   en Cloudflare + re-registrar en Google OAuth.
 
 ## Archivos clave
-- `frontend/package.json` — deps + scripts `preview`/`deploy`.
-- `frontend/open-next.config.ts` — `defineCloudflareConfig()` sin overrides.
+- `.github/workflows/deploy-frontend.yml` — todo el pipeline CI/CD. **El único
+  archivo que se toca para mantenimiento del deploy.**
+- `frontend/package.json` — deps `@opennextjs/cloudflare ^1.20.6`, `wrangler ^4.20.0`; scripts `preview`/`deploy`.
 - `frontend/wrangler.jsonc` — `main: .open-next/worker.js`, name `moa-frontend`,
-  nodejs_compat, sin R2 ni IMAGES (no se usan next/image ni ISR).
+  `nodejs_compat`, sin R2 ni IMAGES.
+- `frontend/open-next.config.ts` — `defineCloudflareConfig()` sin overrides.
 - `frontend/next.config.ts` — `outputFileTracingRoot: __dirname`.
+- `frontend/.npmrc` — `network-concurrency=1` + registry (fix de red local; se
+  copia al runner y funciona igual en CI).
 - `frontend/docs/ESTADO-PARA-CLAUDE.md` — estado general del proyecto.
-- `frontend/app/feed/page.tsx`, `frontend/app/mensajes/page.tsx` — fix Suspense.
