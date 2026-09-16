@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next dev",
     "build": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next build",
-    "start": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next start"
+    "start": "node --require ./preload-swc.js ./node_modules/next/dist/bin/next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
-    "next": "^15.5.6",
+    "@opennextjs/cloudflare": "^1.20.6",
+    "next": "^15.5.25",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -18,6 +21,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.20.0"
   }
 }

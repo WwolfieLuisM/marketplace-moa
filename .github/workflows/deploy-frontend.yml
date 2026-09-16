@@ -1,0 +1,38 @@
+name: Deploy frontend a Cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build con OpenNext
+        working-directory: frontend
+        run: pnpm deploy
+        env:
+          NEXT_PUBLIC_API_URL: https://moa-api-8y3i.onrender.com
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: 687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com

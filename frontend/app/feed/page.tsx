@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ComponentType } from "react";
 import Header from "@/components/Header";
@@ -53,6 +51,25 @@ function unir(prev: FeedPublicacion[], nuevos: FeedPublicacion[]) {
 }
 
 export default function FeedPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
+          <h1 className="text-2xl font-bold text-ink sm:text-[28px]">
+            ¿Qué estás buscando en Moa?
+          </h1>
+          <p className="mt-1 text-[14px] text-slate-muted">
+            Publicaciones de comercios y vendedores del municipio.
+          </p>
+        </main>
+      }
+    >
+      <ContenidoFeed />
+    </Suspense>
+  );
+}
+
+function ContenidoFeed() {
   const { usuario } = useAuth();
   const { esFavorito, toggle } = useFavoritos();
   const searchParams = useSearchParams();

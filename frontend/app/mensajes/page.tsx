@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
@@ -13,6 +13,23 @@ import { formatearLista, inicioDeDia } from "@/lib/fecha";
 import type { Conversacion, DetallePublicacion } from "@/lib/types";
 
 export default function MensajesPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header />
+          <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
+            <p className="text-[14px] text-slate-muted">Cargando mensajes...</p>
+          </main>
+        </>
+      }
+    >
+      <ContenidoMensajes />
+    </Suspense>
+  );
+}
+
+function ContenidoMensajes() {
   const router = useRouter();
   const params = useSearchParams();
   const { usuario, cargando } = useAuth();
