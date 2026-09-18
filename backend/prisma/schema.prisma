@@ -35,8 +35,25 @@ model User {
   deviceTokens              DeviceToken[]
   reportesHechos            Reporte[]             @relation("ReportesHechos")
   favoritos                 Favorito[]
+  tokensRecuperacion        TokenRecuperacion[]
 
   @@map("users")
+}
+
+/// Token de recuperación de contraseña (expira en 30 min, uso único).
+/// Migrado a Neon (branch production) via Neon Data API el 2026-09-18.
+model TokenRecuperacion {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique
+  expiraEn  DateTime  @map("expira_en") @db.Timestamptz(6)
+  usado     Boolean   @default(false)
+  creadoEn  DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_token_recuperacion_user")
+  @@map("token_recuperacion")
 }
 
 /// CRÍTICO: número de carnet de identidad. NUNCA exponer por API pública.

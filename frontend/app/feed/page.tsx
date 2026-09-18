@@ -3,7 +3,6 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ComponentType } from "react";
-import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import ErrorBanner from "@/components/ErrorBanner";
 import {
@@ -178,7 +177,6 @@ function ContenidoFeed() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
         <h1 className="text-2xl font-bold text-ink sm:text-[28px]">
           ¿Qué estás buscando en Moa?

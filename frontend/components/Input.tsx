@@ -5,9 +5,11 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   icon?: ReactNode;
+  right?: ReactNode;
+  hint?: ReactNode;
 };
 
-export default function Input({ label, icon, className = "", id, ...props }: Props) {
+export default function Input({ label, icon, right, hint, className = "", id, ...props }: Props) {
   return (
     <div className="mb-[18px]">
       {label && (
@@ -25,10 +27,14 @@ export default function Input({ label, icon, className = "", id, ...props }: Pro
           id={id}
           className={`w-full rounded-[10px] border-[1.5px] border-line bg-white px-[14px] py-3 text-[15px] text-ink outline-none transition-colors duration-150 placeholder:text-slate-400 focus:border-brand ${
             icon ? "pl-[42px]" : ""
-          } ${className}`}
+          } ${right ? "pr-[42px]" : ""} ${className}`}
           {...props}
         />
+        {right && (
+          <span className="absolute right-[10px] top-1/2 -translate-y-1/2"> {right}</span>
+        )}
       </div>
+      {hint && <p className="mt-1.5 text-[12.5px]">{hint}</p>}
     </div>
   );
 }

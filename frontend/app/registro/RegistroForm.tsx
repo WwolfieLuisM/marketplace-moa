@@ -10,6 +10,28 @@ import { IconLock, IconLogo, IconMail, IconUser } from "@/components/icons";
 import { useAuth } from "@/lib/auth";
 import { REPARTOS_MOA } from "@/lib/types";
 
+const CLAVES_DEBILES = new Set([
+  "12345678",
+  "password",
+  "contraseña",
+  "11111111",
+  "87654321",
+]);
+
+function validarPassword(password: string, email: string, nombre: string): string | null {
+  if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+  const minus = password.toLowerCase();
+  if (CLAVES_DEBILES.has(password) || CLAVES_DEBILES.has(minus)) {
+    return "Esa contraseña es muy común, elige otra";
+  }
+  for (const ref of [email.trim().toLowerCase(), nombre.trim().toLowerCase()]) {
+    if (ref && minus === ref) {
+      return "La contraseña no puede ser igual a tu email o nombre";
+    }
+  }
+  return null;
+}
+
 export default function RegistroForm() {
   const router = useRouter();
   const { usuario, cargando, registrar } = useAuth();
@@ -22,6 +44,7 @@ export default function RegistroForm() {
   const [reparto, setReparto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorPassword, setErrorPassword] = useState<string | null>(null);
 
   useEffect(() => {
     if (usuario && !cargando) router.replace("/feed");
@@ -30,8 +53,14 @@ export default function RegistroForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setErrorPassword(null);
     if (!reparto) {
       setError("Selecciona tu reparto.");
+      return;
+    }
+    const errPwd = validarPassword(password, email, nombre);
+    if (errPwd) {
+      setErrorPassword(errPwd);
       return;
     }
     setEnviando(true);
@@ -46,7 +75,17 @@ export default function RegistroForm() {
       });
       router.replace("/feed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la cuenta.");
+      const msg = err instanceof Error ? err.message : "No se pudo crear la cuenta.";
+      const erroresPassword = [
+        "La contraseña debe tener al menos 8 caracteres",
+        "Esa contraseña es muy común, elige otra",
+        "La contraseña no puede ser igual a tu email o nombre",
+      ];
+      if (erroresPassword.includes(msg)) {
+        setErrorPassword(msg);
+      } else {
+        setError(msg);
+      }
     } finally {
       setEnviando(false);
     }
@@ -122,6 +161,15 @@ export default function RegistroForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          hint={
+            errorPassword ? (
+              <span className="text-red-600">{errorPassword}</span>
+            ) : password.length > 0 ? (
+              <span className={password.length >= 8 ? "font-medium text-success" : "text-slate-muted"}>
+                {password.length}/8 caracteres
+              </span>
+            ) : null
+          }
         />
 
         <label htmlFor="reparto" className="mb-1.5 block text-[13px] font-semibold text-slate-700">

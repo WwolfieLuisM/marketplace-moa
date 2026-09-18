@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
 import ErrorBanner from "@/components/ErrorBanner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -39,7 +38,6 @@ export default function AdminDashboard() {
   if (cargando) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-8">
           <p className="text-[14px] text-slate-muted">Cargando...</p>
         </main>
@@ -50,7 +48,6 @@ export default function AdminDashboard() {
   if (!usuario) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-16 text-center">
           <p className="text-[14px] text-slate-muted">Inicia sesión como administrador.</p>
           <Link
@@ -67,7 +64,6 @@ export default function AdminDashboard() {
   if (usuario.rol !== "admin") {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-16 text-center">
           <p className="text-[14px] text-slate-muted">No tienes permisos para acceder aquí.</p>
         </main>
@@ -94,7 +90,6 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-8">
         <h1 className="text-[22px] font-bold text-ink">Panel de administración</h1>
         <p className="mt-1 text-[14px] text-slate-muted">Resumen general de Marketplace Moa.</p>

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
 import ErrorBanner from "@/components/ErrorBanner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -119,7 +118,6 @@ export default function AdminVendedores() {
   if (cargando || !usuario || usuario.rol !== "admin") {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-8">
           {cargando ? (
             <p className="text-[14px] text-slate-muted">Cargando...</p>
@@ -133,7 +131,6 @@ export default function AdminVendedores() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-8">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-[22px] font-bold text-ink">Vendedores</h1>

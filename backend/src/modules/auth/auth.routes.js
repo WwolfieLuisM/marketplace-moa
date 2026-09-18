@@ -61,6 +61,22 @@ router.post("/google", async (req, res, next) => {
   }
 });
 
+router.post("/olvide-password", async (req, res, next) => {
+  try {
+    res.json(await authService.olvidePassword(req.body));
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post("/restablecer-password", async (req, res, next) => {
+  try {
+    res.json(await authService.restablecerPassword(req.body));
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post("/refresh", async (req, res, next) => {
   try {
     const result = await authService.refresh(req.cookies?.[REFRESH_COOKIE]);

@@ -3,7 +3,6 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import Header from "@/components/Header";
 import Avatar from "@/components/Avatar";
 import ErrorBanner from "@/components/ErrorBanner";
 import { IconChat } from "@/components/icons";
@@ -16,12 +15,9 @@ export default function MensajesPage() {
   return (
     <Suspense
       fallback={
-        <>
-          <Header />
-          <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
-            <p className="text-[14px] text-slate-muted">Cargando mensajes...</p>
-          </main>
-        </>
+        <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
+          <p className="text-[14px] text-slate-muted">Cargando mensajes...</p>
+        </main>
       }
     >
       <ContenidoMensajes />
@@ -86,7 +82,6 @@ function ContenidoMensajes() {
   if (cargando || cargandoLista) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
           <p className="text-[14px] text-slate-muted">Cargando mensajes...</p>
         </main>
@@ -97,7 +92,6 @@ function ContenidoMensajes() {
   if (!usuario) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-16 text-center">
           <IconChat className="mx-auto h-10 w-10 text-slate-muted" />
           <p className="mt-3 text-[14px] text-slate-muted">
@@ -116,7 +110,6 @@ function ContenidoMensajes() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-[22px] font-bold text-ink">Mensajes</h1>

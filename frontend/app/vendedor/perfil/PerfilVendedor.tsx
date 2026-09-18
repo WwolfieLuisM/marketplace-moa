@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import type { VendedorPerfil, MiPublicacion, Producto } from "@/lib/types";
@@ -117,10 +116,9 @@ export default function PerfilVendedor() {
     }
   };
 
-  if (cargando) {
+if (cargando) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[720px] px-4 py-6">
           <div className="flex justify-center py-24">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
@@ -133,7 +131,6 @@ export default function PerfilVendedor() {
   if (!perfil) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[720px] px-4 py-6">
           {error && (
             <div className="mb-4 rounded border border-red-800/50 bg-red-900/20 px-4 py-3 text-sm text-red-300">
@@ -160,9 +157,8 @@ export default function PerfilVendedor() {
   const restoDia = LIMITE_DIA - perfil.productosHoy;
   const restoTotal = LIMITE_TOTAL - perfil.productosTotalDemo;
 
-  return (
+return (
     <>
-      <Header />
       <main className="mx-auto max-w-[720px] px-4 py-6 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-bold">Mi perfil de vendedor</h1>

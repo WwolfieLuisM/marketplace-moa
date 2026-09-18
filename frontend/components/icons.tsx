@@ -83,6 +83,34 @@ export function IconLock(props: IconProps) {
   );
 }
 
+export function IconEye(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path
+        d="M1 10S4 4 10 4S19 10 19 10S16 16 10 16S1 10 1 10Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+export function IconEyeOff(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M2 2L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M1 10S4 4 10 4C11.5 4 12.8 4.4 14 5M19 10S17.7 13 15 15M8.5 8.5A2.5 2.5 0 0011.5 11.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconUser(props: IconProps) {
   return (
     <svg {...base(props)}>

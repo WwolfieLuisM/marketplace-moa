@@ -14,9 +14,11 @@ const REFRESHED_PATHS = new Set([REFRESHED_ROUTE, "/auth/login", "/auth/register
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -95,11 +97,9 @@ async function parseJson(res: Response): Promise<unknown> {
     }
   }
   if (!res.ok) {
-    const message =
-      (data as { error?: string })?.error ||
-      (data as { message?: string })?.message ||
-      `Error ${res.status}`;
-    throw new ApiError(res.status, message);
+    const body = data as { error?: string; message?: string; code?: string };
+    const message = body.error || body.message || `Error ${res.status}`;
+    throw new ApiError(res.status, message, body.code);
   }
   return data;
 }

@@ -25,6 +25,15 @@ services:
       # URL del servicio Render: se reemplaza tras el primer deploy con la URL real.
       - key: NEXT_PUBLIC_API_URL
         value: https://moa-api-8y3i.onrender.com
+      # Base URL pública del frontend para los enlaces de recuperación de
+      # contraseña (en el correo). En producción es el Worker de Cloudflare.
+      - key: FRONTEND_BASE_URL
+        value: https://moa-frontend.luisiking89.workers.dev
+      # Gmail SMTP (correos transaccionales - recuperación de contraseña).
+      - key: GMAIL_SMTP_USER
+        sync: false
+      - key: GMAIL_SMTP_PASS
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL

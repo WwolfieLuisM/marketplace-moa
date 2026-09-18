@@ -35,6 +35,8 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Build de OpenNext (frontend worker de Cloudflare)
+.open-next/
+
 # Editores
 .vscode/
-.idea/.open-next/

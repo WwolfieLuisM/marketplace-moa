@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import Button from "@/components/Button";
 import ErrorBanner from "@/components/ErrorBanner";
 import { IconBox, IconPlus, IconWarning } from "@/components/icons";
@@ -188,7 +187,6 @@ export default function NuevaPublicacionForm() {
   if (cargando || cargandoInicial) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
           <p className="text-[14px] text-slate-muted">Cargando...</p>
         </main>
@@ -199,7 +197,6 @@ export default function NuevaPublicacionForm() {
   if (!usuario) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-16 text-center">
           <IconWarning className="mx-auto h-10 w-10 text-slate-muted" />
           <p className="mt-3 text-[14px] text-slate-muted">Inicia sesión para publicar productos.</p>
@@ -214,7 +211,6 @@ export default function NuevaPublicacionForm() {
   if (!perfil) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-16 text-center">
           <IconWarning className="mx-auto h-10 w-10 text-brand-light" />
           <p className="mt-3 text-[14px] text-slate-muted">
@@ -233,7 +229,6 @@ export default function NuevaPublicacionForm() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8">
         <h1 className="mb-1 text-[22px] font-bold text-ink">Nueva publicación</h1>
         <p className="mb-6 text-[14px] text-slate-muted">Agrega hasta 3 productos con fotos y precios.</p>

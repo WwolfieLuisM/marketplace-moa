@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import type { DetallePublicacion } from "@/lib/types";
 
 function Loader({ text = "Cargando..." }: { text?: string }) {
@@ -58,7 +57,6 @@ export default function DetallePublicacion() {
   if (loading) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[800px] px-4 py-6">
           <Loader />
         </main>
@@ -69,7 +67,6 @@ export default function DetallePublicacion() {
   if (error) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[800px] px-4 py-6">
           <div className="rounded border border-white/10 bg-white/5 px-5 py-16 text-center text-white/60">
             <p>{error}</p>
@@ -93,7 +90,6 @@ export default function DetallePublicacion() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto max-w-[800px] px-4 py-6 text-white">
         <nav className="mb-4 text-xs text-white/40">
           <button onClick={() => router.push("/feed")} className="hover:text-white/70">

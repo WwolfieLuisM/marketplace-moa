@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import ErrorBanner from "@/components/ErrorBanner";
 import { IconBox, IconChat, IconClock, IconLocation, IconStore } from "@/components/icons";
@@ -61,7 +60,6 @@ export default function VendedorPublicoPage() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-8">
         <nav className="mb-4 text-[12px] text-slate-muted">
           <button onClick={() => router.push("/feed")} className="hover:text-brand">

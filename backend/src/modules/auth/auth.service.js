@@ -1,12 +1,18 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import prisma from "../../lib/prisma.js";
+import { validarPassword } from "./password.js";
+import { enviarCorreoRecuperacion } from "../../lib/mailer.js";
 
 const ACCESS_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET;
 const ACCESS_TTL = "15m";
 const REFRESH_TTL = "30d";
+const TOKEN_RECUPERACION_TTL_MIN = 30;
+const MENSAJE_OLVIDE =
+  "Si existe una cuenta con ese correo, te enviamos un enlace para restablecer tu contraseña.";
 
 function signAccessToken(user) {
   return jwt.sign(
@@ -43,6 +49,8 @@ async function register({ nombre, apellidos, email, telefono, password, reparto 
     throw Object.assign(new Error("Faltan campos obligatorios"), { status: 400 });
   }
   const emailNormalizado = email.trim().toLowerCase();
+
+  validarPassword(password, { email: emailNormalizado, nombre });
 
   const existe = await prisma.user.findFirst({
     where: { OR: [{ email: emailNormalizado }, { telefono: telefono || undefined }] },
@@ -193,4 +201,77 @@ async function actualizarUsuario({ userId, datos }) {
   return publicUser(user);
 }
 
-export default { register, login, googleLogin, refresh, me, actualizarUsuario };
+// Recuperación de contraseña con enlace por correo (Gmail SMTP/Nodemailer).
+// SIEMPRE responde el mismo mensaje genérico, exista o no la cuenta: no se
+// debe revelar si el email está registrado.
+async function olvidePassword({ email }) {
+  const emailNormalizado = String(email || "").trim().toLowerCase();
+  if (!emailNormalizado) {
+    throw Object.assign(new Error("Falta el correo electrónico"), { status: 400 });
+  }
+
+  const usuario = await prisma.user.findUnique({ where: { email: emailNormalizado } });
+  if (usuario && usuario.authProvider === "local" && usuario.activo) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiraEn = new Date(Date.now() + TOKEN_RECUPERACION_TTL_MIN * 60 * 1000);
+    await prisma.tokenRecuperacion.create({
+      data: { userId: usuario.id, token, expiraEn },
+    });
+
+    const baseUrl =
+      process.env.FRONTEND_BASE_URL || process.env.FRONTEND_URL || "http://localhost:3000";
+    const enlace = `${baseUrl}/restablecer?token=${token}`;
+
+    try {
+      await enviarCorreoRecuperacion(usuario.email, enlace, usuario.nombre);
+    } catch (e) {
+      console.error("[auth] No se pudo enviar el correo de recuperación:", e);
+    }
+  }
+
+  return { message: MENSAJE_OLVIDE };
+}
+
+async function restablecerPassword({ token, nuevaPassword }) {
+  if (!token || !nuevaPassword) {
+    throw Object.assign(new Error("Faltan el token o la nueva contraseña"), { status: 400 });
+  }
+
+  const registro = await prisma.tokenRecuperacion.findUnique({ where: { token } });
+  if (!registro || registro.usado || registro.expiraEn.getTime() <= Date.now()) {
+    throw Object.assign(new Error("El enlace es inválido o ya expiró. Pide uno nuevo."), {
+      status: 400,
+    });
+  }
+
+  const usuario = await prisma.user.findUnique({ where: { id: registro.userId } });
+  if (!usuario || !usuario.activo || usuario.authProvider !== "local") {
+    throw Object.assign(new Error("El enlace es inválido o ya expiró. Pide uno nuevo."), {
+      status: 400,
+    });
+  }
+
+  validarPassword(nuevaPassword, {
+    email: usuario.email,
+    nombre: usuario.nombre,
+  });
+
+  const passwordHash = await bcrypt.hash(nuevaPassword, 10);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: usuario.id }, data: { passwordHash } }),
+    prisma.tokenRecuperacion.update({ where: { id: registro.id }, data: { usado: true } }),
+  ]);
+
+  return { message: "Contraseña actualizada. Ya puedes iniciar sesión." };
+}
+
+export default {
+  register,
+  login,
+  googleLogin,
+  refresh,
+  me,
+  actualizarUsuario,
+  olvidePassword,
+  restablecerPassword,
+};

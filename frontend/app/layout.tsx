@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/lib/auth";
+import AppShell from "@/components/AppShell";
 import MobileNav from "@/components/MobileNav";
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default function RootLayout({
     <html lang="es">
       <body className="bg-surface text-ink">
         <AuthProvider>
-          {children}
+          <AppShell>{children}</AppShell>
           <MobileNav />
         </AuthProvider>
       </body>

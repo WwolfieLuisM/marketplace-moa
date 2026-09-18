@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import ErrorBanner from "@/components/ErrorBanner";
@@ -59,7 +58,6 @@ export default function PerfilForm() {
   if (cargando) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-8">
           <p className="text-[14px] text-slate-muted">Cargando perfil...</p>
         </main>
@@ -70,7 +68,6 @@ export default function PerfilForm() {
   if (!usuario) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-16 text-center">
           <p className="text-[14px] text-slate-muted">Inicia sesión para ver tu perfil.</p>
           <Link
@@ -86,7 +83,6 @@ export default function PerfilForm() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-8">
         <h1 className="text-[22px] font-bold text-ink">Mi perfil</h1>
         <p className="mt-1 text-[14px] text-slate-muted">

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import ErrorBanner from "@/components/ErrorBanner";
 import { IconHeart } from "@/components/icons";
@@ -44,7 +43,6 @@ export default function FavoritosPage() {
   if (cargando || cargandoLista) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
           <p className="text-[14px] text-slate-muted">Cargando guardados...</p>
         </main>
@@ -55,7 +53,6 @@ export default function FavoritosPage() {
   if (!usuario) {
     return (
       <>
-        <Header />
         <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-16 text-center">
           <IconHeart className="mx-auto h-10 w-10 text-slate-muted" />
           <p className="mt-3 text-[14px] text-slate-muted">
@@ -74,7 +71,6 @@ export default function FavoritosPage() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-[22px] font-bold text-ink">Guardados</h1>

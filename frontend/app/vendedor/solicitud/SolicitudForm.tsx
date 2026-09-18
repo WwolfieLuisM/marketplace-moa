@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { REPARTOS_MOA } from "@/lib/types";
@@ -65,10 +64,9 @@ export default function SolicitudForm() {
     return () => { activo = false; };
   }, [accessToken]);
 
-  if (!accessToken || cargando) {
+if (!accessToken || cargando) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[560px] px-4 py-6">
           <div className="flex justify-center py-24">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
@@ -81,7 +79,6 @@ export default function SolicitudForm() {
   if (existePerfil) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[560px] px-4 py-6">
           <div className="rounded border border-white/10 bg-white/5 p-6 text-center">
             <p className="text-sm text-white/60">Ya tienes un perfil de vendedor.</p>
@@ -97,10 +94,9 @@ export default function SolicitudForm() {
     );
   }
 
-  if (exito) {
+if (exito) {
     return (
       <>
-        <Header />
         <main className="mx-auto max-w-[560px] px-4 py-6">
           <div className="rounded border border-green-800/50 bg-green-900/20 p-6 text-center">
             <p className="text-sm text-green-300">
@@ -149,9 +145,8 @@ export default function SolicitudForm() {
   const inputCls =
     "w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-500 placeholder:text-white/30";
 
-  return (
+return (
     <>
-      <Header />
       <main className="mx-auto max-w-[560px] px-4 py-6 text-white">
         <h1 className="mb-1 text-xl font-bold">Ser vendedor</h1>
         <p className="mb-6 text-sm text-white/40">
