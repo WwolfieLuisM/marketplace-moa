@@ -183,8 +183,7 @@ Cloudflare ya sirve el frontend completo (ruta `https://moa-frontend.luisiking89
 Rutas desplegadas: `/login`, `/registro`, `/feed`, `/publicaciones/*`,
 `/mensajes/*`, `/favoritos`, `/perfil`, `/vendedor/*`, `/admin/*`. El login con
 Google requiere que el dominio del worker esté registrado en Google Cloud
-Console (Authorized JavaScript origins + redirect URIs) — pendiente si aún no
-está.
+Console (Authorized JavaScript origins + redirect URIs)
 
 ### Roadmap / pendientes
 
