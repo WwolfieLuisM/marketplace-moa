@@ -1,12 +1,24 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 
 const GMAIL_USER = process.env.GMAIL_SMTP_USER;
 const GMAIL_PASS = process.env.GMAIL_SMTP_PASS;
 
+// Render no tiene ruta IPv6: resolvemos smtp.gmail.com a una IP IPv4 literal
+// y conectamos directo (con servername para que el TLS valide igual).
+const SMTP_HOST = await dns.promises
+  .lookup("smtp.gmail.com", { family: 4 })
+  .then((r) => {
+    console.log(`[mailer] smtp.gmail.com -> IPv4 ${r.address}`);
+    return r.address;
+  })
+  .catch(() => "smtp.gmail.com");
+
 const transport = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: SMTP_HOST,
   port: 587,
   secure: false,
+  tls: { servername: "smtp.gmail.com" },
   auth: GMAIL_USER && GMAIL_PASS ? { user: GMAIL_USER, pass: GMAIL_PASS } : undefined,
 });
 
