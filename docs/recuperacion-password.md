@@ -7,8 +7,19 @@ Estado actual:
 - **Parte 1 (validaciA3n en registro): COMPLETADA** e integrada.
 - **Parte 2 (recuperaciA3n con Gmail SMTP): COMPLETADA** y en producciA3n.
   - MigraciA3n `TokenRecuperacion` aplicada a Neon (branch `production`).
-  - Prueba punta a punta OK (olvide-password -> correo -> restablecer -> login).
-  - Desplegado: backend Render + frontend Cloudflare Worker via CI/CD (push a main).
+   - Prueba punta a punta OK (olvide-password -> correo -> restablecer -> login).
+   - Desplegado: backend Render + frontend Cloudflare Worker via CI/CD (push a main).
+
+### Incidente resuelto: SMTP fallando desde Render (IPv6 / bloqueo de Gmail)
+Problema: `connect ENETUNREACH 2607:f8b0:...:587` / `ETIMEDOUT` al enviar desde
+Render → Render no tiene ruta IPv6 y Gmail corta el 587 desde datacenters.
+Fix en `backend/src/lib/mailer.js` (queda documentado aquí como referencia):
+- Resolver `smtp.gmail.com` a una **IP IPv4 literal** al iniciar
+  (`dns.promises.lookup(..., { family: 4 })`) y conectar a esa IP, con
+  `tls.servername: "smtp.gmail.com"` para que el TLS valide igual.
+- Probar **465 (SSL) primero y caer a 587 (STARTTLS)** en orden, con timeouts
+  de 15s/30s y `continue` entre puertos si falla (`ESOCKET`/`ETIMEDOUT`).
+- Resultado: el correo de recuperación llega a Gmail desde producción.
 
 ---
 
