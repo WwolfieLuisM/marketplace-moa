@@ -4,10 +4,11 @@ Guía de pasos para implementar y probar dos mejoras al módulo de Auth de
 Marketplace Moa. Referencia original: `prompt-recuperacion-password.md`.
 
 Estado actual:
-- **Parte 1 (validación en registro): COMPLETADA** e integrada.
-- **Parte 2 (recuperación con Gmail SMTP): IMPLEMENTADA** (backend + frontend),
-  pendiente de migrar `TokenRecuperacion` a Neon (aprobación del product owner)
-  y de una prueba punta a punta configurando la `GMAIL_SMTP_USER` real.
+- **Parte 1 (validaciA3n en registro): COMPLETADA** e integrada.
+- **Parte 2 (recuperaciA3n con Gmail SMTP): COMPLETADA** y en producciA3n.
+  - MigraciA3n `TokenRecuperacion` aplicada a Neon (branch `production`).
+  - Prueba punta a punta OK (olvide-password -> correo -> restablecer -> login).
+  - Desplegado: backend Render + frontend Cloudflare Worker via CI/CD (push a main).
 
 ---
 
