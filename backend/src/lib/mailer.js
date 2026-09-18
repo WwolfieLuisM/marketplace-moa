@@ -4,8 +4,12 @@ import dns from "node:dns";
 const GMAIL_USER = process.env.GMAIL_SMTP_USER;
 const GMAIL_PASS = process.env.GMAIL_SMTP_PASS;
 
+const correoConfigurado = Boolean(GMAIL_USER && GMAIL_PASS);
+
 // Render no tiene ruta IPv6: resolvemos smtp.gmail.com a una IP IPv4 literal
 // y conectamos directo (con servername para que el TLS valide igual).
+// Google suele cortar el 587 desde datacenters: probamos 465 (SSL) primero
+// y caemos a 587 (STARTTLS) si falla.
 const SMTP_HOST = await dns.promises
   .lookup("smtp.gmail.com", { family: 4 })
   .then((r) => {
@@ -14,13 +18,33 @@ const SMTP_HOST = await dns.promises
   })
   .catch(() => "smtp.gmail.com");
 
-const transport = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: 587,
-  secure: false,
-  tls: { servername: "smtp.gmail.com" },
-  auth: GMAIL_USER && GMAIL_PASS ? { user: GMAIL_USER, pass: GMAIL_PASS } : undefined,
-});
+const PUERTOS_Y_TLS = [
+  { port: 465, secure: true },
+  { port: 587, secure: false },
+];
+
+function crearTransport(entrada) {
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: entrada.port,
+    secure: entrada.secure,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    tls: { servername: "smtp.gmail.com", rejectUnauthorized: true },
+    auth: GMAIL_USER && GMAIL_PASS ? { user: GMAIL_USER, pass: GMAIL_PASS } : undefined,
+  });
+}
+
+async function enviar(transport, opciones, puerto) {
+  try {
+    await transport.sendMail(opciones);
+    return { ok: true, puerto };
+  } catch (err) {
+    console.warn(`[mailer] FALLO puerto ${puerto}: ${err.code || err.message}`);
+    return { ok: false, puerto, err };
+  }
+}
 
 export const correoConfigurado = Boolean(GMAIL_USER && GMAIL_PASS);
 
@@ -32,7 +56,8 @@ export async function enviarCorreoRecuperacion(destinatario, link, nombre) {
     console.warn("[mailer] GMAIL_SMTP_USER/GMAIL_SMTP_PASS no configurados: no se envió el correo.");
     return;
   }
-  await transport.sendMail({
+
+  const contenido = {
     from: `Marketplace Moa <${GMAIL_USER}>`,
     to: destinatario,
     subject: "Recupera tu contraseña — Marketplace Moa",
@@ -86,7 +111,19 @@ export async function enviarCorreoRecuperacion(destinatario, link, nombre) {
         </table>
       </div>
     `,
-  });
+  };
+
+  for (const entrada of PUERTOS_Y_TLS) {
+    const transport = crearTransport(entrada);
+    const res = await enviar(transport, contenido, entrada.port);
+    if (res.ok) {
+      console.log(`[mailer] Correo de recuperación enviado OK (puerto ${entrada.port}).`);
+      return;
+    }
+    if (res.err.code === "ESOCKET" || res.err.code === "ETIMEDOUT") continue; // probar siguiente puerto
+    return; // error de auth/envía no se corrige con otro puerto
+  }
+  console.error("[mailer] Agotados todos los puertos SMTP, no se pudo enviar el correo.");
 }
 
 function escapeHtml(s) {
