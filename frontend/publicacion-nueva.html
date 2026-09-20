@@ -101,10 +101,18 @@
     try {
       const { categorias: cats } = await api.get('/feed/categorias');
       categorias = cats;
+      const opts = categorias.map((c) => `<option value="${c.id}">${esc(c.nombre)}</option>`).join('');
+      Array.from(prodsWrap.querySelectorAll('[data-categoria]')).forEach((sel) => {
+        const actual = sel.value;
+        sel.innerHTML = `<option value="">Selecciona…</option>${opts}`;
+        if (actual) sel.value = actual;
+      });
     } catch (e) {
       categorias = [];
     }
   }
+
+  cargarCategorias();
 
   async function cargarLimites() {
     const infoTexto = document.getElementById('infoTexto');
@@ -290,8 +298,7 @@
   });
 
   esperarSesion().then(async (u) => {
-    if (!u) { location.href = 'login.html'; return; }
-    await cargarCategorias();
+    if (!u) { if (window.openAuth) openAuth(); else location.href = 'login.html'; return; }
     await cargarLimites();
   });
 })();
