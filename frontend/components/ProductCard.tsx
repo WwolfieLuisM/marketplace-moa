@@ -1,11 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FeedPublicacion } from "@/lib/types";
 import { tiempoRelativo } from "@/lib/fecha";
 import { useAuth } from "@/lib/auth";
-import { IconChat, IconEye, IconHeart, IconLocation } from "@/components/icons";
+import { IconChat, IconEye, IconHeart, IconLocation, IconLock } from "@/components/icons";
 
 function nombreVendedor(pub: FeedPublicacion) {
   const u = pub.vendedor?.user;
@@ -53,6 +54,20 @@ export default function ProductCard({
   const router = useRouter();
   const { usuario } = useAuth();
   const logueado = logueadoProp ?? !!usuario;
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const kebabRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuAbierto) return;
+    function clickFuera(e: MouseEvent) {
+      if (kebabRef.current && !kebabRef.current.contains(e.target as Node)) {
+        setMenuAbierto(false);
+      }
+    }
+    window.addEventListener("click", clickFuera);
+    return () => window.removeEventListener("click", clickFuera);
+  }, [menuAbierto]);
+
   const foto = fotoPrincipalDe(publicacion);
   const principal = prodPrincipal(publicacion);
   const otros = otrosProductos(publicacion);
@@ -76,6 +91,16 @@ export default function ProductCard({
     router.push(`/mensajes?publicacion=${publicacion.id}`);
   }
 
+  function compartir() {
+    const url = `${window.location.origin}/publicaciones/${publicacion.id}`;
+    if (navigator.share) {
+      void navigator.share({ title: publicacion.titulo, url });
+    } else {
+      void navigator.clipboard.writeText(url);
+    }
+    setMenuAbierto(false);
+  }
+
   return (
     <article className="card">
       <div className="pub-head">
@@ -83,10 +108,6 @@ export default function ProductCard({
         <div className="pub-meta">
           <span className="pub-name">{nombre}</span>
           <div className="pub-sub">
-            <span className="badge badge-active">
-              <svg width="5" height="5" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor" /></svg>
-              Activo
-            </span>
             <span className="badge badge-zone">
               <IconLocation width={8} height={8} />
               {publicacion.reparto || "Moa"}
@@ -94,11 +115,38 @@ export default function ProductCard({
             <span className="pub-time">{tiempoRelativo(publicacion.creadoEn)}</span>
           </div>
         </div>
-      </div>
 
-      <button className="circle-btn kebab-btn" aria-label="Más opciones">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
-      </button>
+        {logueado && (
+          <div className="head-actions">
+            <button
+              className={`fav-btn${fav ? " active" : ""}`}
+              aria-label={fav ? "Quitar de guardados" : "Guardar"}
+              aria-pressed={fav}
+              onClick={toggleFav}
+            >
+              <IconHeart width={18} height={18} fill={fav ? "currentColor" : "none"} />
+            </button>
+            <div ref={kebabRef} style={{ position: "relative" }}>
+              <button
+                className="circle-btn kebab-btn"
+                aria-label="Más opciones"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuAbierto((v) => !v);
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
+              </button>
+              <div className={`kebab-menu${menuAbierto ? " open" : ""}`}>
+                <button onClick={compartir}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+                  Compartir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {foto ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -111,15 +159,6 @@ export default function ProductCard({
           </div>
         </div>
       )}
-
-      <button
-        className={`heart-btn${fav ? " active" : ""}`}
-        aria-label={fav ? "Quitar de guardados" : "Guardar"}
-        aria-pressed={fav}
-        onClick={toggleFav}
-      >
-        <IconHeart width={18} height={18} fill={fav ? "currentColor" : "none"} />
-      </button>
 
       <div className="primary-prod">
         <div className="primary-prod-title">{principal?.nombre || publicacion.titulo}</div>
@@ -153,8 +192,17 @@ export default function ProductCard({
 
       <div className="pub-footer">
         <div className="phone-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 012 4.18 2 2 0 014 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
-          {telefono || "Sin número"}
+          {logueado && telefono ? (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 012 4.18 2 2 0 014 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+              {telefono}
+            </>
+          ) : (
+            <span className="phone-lock">
+              <IconLock width={11} height={11} />
+              Ver teléfono
+            </span>
+          )}
         </div>
         <div className="pub-actions">
           <Link href={`/publicaciones/${publicacion.id}`} className="action-btn">

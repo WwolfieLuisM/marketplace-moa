@@ -40,13 +40,6 @@ const ICONOS_CATEGORIA: Record<string, ComponentType<{ className?: string }>> = 
   Otros: IconBox,
 };
 
-const OPCIONES_ORDEN = [
-  { valor: "relevancia", etiqueta: "Relevancia" },
-  { valor: "recientes", etiqueta: "Más recientes" },
-  { valor: "menor_precio", etiqueta: "Menor precio" },
-  { valor: "mayor_precio", etiqueta: "Mayor precio" },
-];
-
 function unir(prev: FeedPublicacion[], nuevos: FeedPublicacion[]) {
   const mapa = new Map(prev.map((p) => [p.id, p]));
   for (const n of nuevos) mapa.set(n.id, n);
@@ -82,7 +75,6 @@ function ContenidoFeed() {
   const [qAplicada, setQAplicada] = useState("");
   const [reparto, setReparto] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
-  const [orden, setOrden] = useState("relevancia");
   const [vista, setVista] = useState<"feed" | "busqueda">("feed");
   const [pagina, setPagina] = useState(1);
   const [hayMas, setHayMas] = useState(true);
@@ -108,7 +100,6 @@ function ContenidoFeed() {
           const params = new URLSearchParams();
           if (reparto) params.set("reparto", reparto);
           if (categoriaId) params.set("categoria", categoriaId);
-          if (orden) params.set("orden", orden);
           params.set("page", String(n));
           const data = await api.get<{ feed: FeedPublicacion[]; page: number }>(
             `/feed?${params}`
@@ -128,7 +119,7 @@ function ContenidoFeed() {
         }
       }
     },
-    [vista, qAplicada, reparto, categoriaId, orden]
+    [vista, qAplicada, reparto, categoriaId]
   );
 
   // búsqueda con debounce: escribe -> consulta /feed/productos ; vacío -> vuelve al feed
@@ -149,7 +140,7 @@ function ContenidoFeed() {
     setPagina(1);
     setHayMas(true);
     void cargarPagina(1, false);
-  }, [vista, qAplicada, reparto, categoriaId, orden, cargarPagina]);
+  }, [vista, qAplicada, reparto, categoriaId, cargarPagina]);
 
   const [categoriasData, setCategoriasData] = useState<Categoria[]>([]);
 
@@ -221,58 +212,34 @@ function ContenidoFeed() {
             })}
         </div>
 
-        <div className="filters-row">
-          <select
-            value={reparto}
-            onChange={(e) => aplicarFiltro("reparto", e.target.value)}
-            className="select-board"
-          >
-            <option value="">Todos los repartos</option>
-            {REPARTOS_MOA.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-          <select
-            value={categoriaId}
-            onChange={(e) => aplicarFiltro("categoria", e.target.value)}
-            className="select-board"
-          >
-            <option value="">Todas las categorías</option>
-            {categoriasData
-              .filter((c) => c.nombre !== "Test Job")
-              .map((c) => (
-                <option key={c.id} value={String(c.id)}>
-                  {c.nombre}
-                </option>
-              ))}
-          </select>
-          {vista !== "busqueda" && (
+        <div className="feed-hdr">
+          <h2>
+            {vista === "busqueda"
+              ? `Resultados para "${qAplicada}"`
+              : "Publicaciones"}
+            {!cargando && publicaciones.length > 0 && (
+              <span> ({publicaciones.length})</span>
+            )}
+          </h2>
+          <div className="feed-tools">
             <select
-              value={orden}
-              onChange={(e) => setOrden(e.target.value)}
+              value={reparto}
+              onChange={(e) => aplicarFiltro("reparto", e.target.value)}
               className="sort-select"
             >
-              {OPCIONES_ORDEN.map((o) => (
-                <option key={o.valor} value={o.valor}>
-                  Ordenar: {o.etiqueta}
+              <option value="">Todos los repartos</option>
+              {REPARTOS_MOA.map((r) => (
+                <option key={r} value={r}>
+                  {r}
                 </option>
               ))}
             </select>
-          )}
+          </div>
         </div>
 
         <ErrorBanner message={error} />
 
         <section className="mt-8">
-          <h2 className="mb-4 text-[15px] font-bold text-ink">
-            {vista === "busqueda"
-              ? `Resultados para "${qAplicada}"`
-              : "Publicaciones recientes"}
-            {!cargando && publicaciones.length > 0 && ` (${publicaciones.length})`}
-          </h2>
-
           {cargando ? (
             <p className="text-[14px] text-slate-muted">Cargando publicaciones...</p>
           ) : publicaciones.length === 0 ? (
