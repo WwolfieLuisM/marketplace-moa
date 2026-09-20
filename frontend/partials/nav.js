@@ -13,6 +13,8 @@
     'solicitud.html': 'perfil',
   };
 
+  const PROTEGIDOS = new Set(['guardados', 'publicar', 'mensajes', 'perfil']);
+
   function marcarActivo() {
     const archivo = location.pathname.split('/').pop() || 'feed.html';
     const activo = activoPorPagina[archivo] || null;
@@ -21,13 +23,26 @@
     });
   }
 
+  function gatearInvitado() {
+    mount.addEventListener('click', (e) => {
+      const item = e.target.closest('.nav-item');
+      if (!item || currentUser) return;
+      if (PROTEGIDOS.has(item.dataset.nav)) {
+        e.preventDefault();
+        if (window.openAuth) openAuth();
+      }
+    });
+  }
+
   function init() {
-    if (mount.querySelector('.mobile-nav')) {
+    const bind = async () => {
+      await esperarSesion();
       marcarActivo();
-      return;
-    }
+      gatearInvitado();
+    };
+    if (mount.querySelector('.mobile-nav')) { void bind(); return; }
     mount.addEventListener('partialloaded', function cargar() {
-      marcarActivo();
+      void bind();
     }, { once: true });
   }
 

@@ -1,8 +1,93 @@
 // ui.js — helpers de render del marketplace (usa `api`, `currentUser` globales de api.js)
 
-if (typeof window.openAuth !== 'function') {
-  window.openAuth = () => { location.href = 'login.html'; };
+const GOOGLE_CLIENT_ID = '687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com';
+
+let guestModalEl = null;
+let googlePanelLock = false;
+
+function cargarGsiPanel() {
+  return new Promise((resolve) => {
+    if (window.google && window.google.accounts) return resolve(true);
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
 }
+
+async function entrarConGoogle() {
+  if (googlePanelLock) return;
+  googlePanelLock = true;
+  const btn = guestModalEl && guestModalEl.querySelector('.panel-google');
+  if (btn) btn.disabled = true;
+  try {
+    const listo = await cargarGsiPanel();
+    const g = listo && window.google && window.google.accounts && window.google.accounts.id;
+    if (!g) { googlePanelLock = false; if (btn) btn.disabled = false; location.href = 'login.html'; return; }
+    g.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async (resp) => {
+        googlePanelLock = false;
+        if (btn) btn.disabled = false;
+        if (!resp || !resp.credential) return;
+        try {
+          const data = await api.post('/auth/google', { idToken: resp.credential });
+          if (data && data.user) location.href = 'feed.html';
+        } catch (err) {
+          window.alert(err.message || 'No se pudo iniciar sesión con Google');
+        }
+      },
+    });
+    g.prompt(() => { googlePanelLock = false; if (btn) btn.disabled = false; });
+  } catch (e) {
+    googlePanelLock = false;
+    if (btn) btn.disabled = false;
+    location.href = 'login.html';
+  }
+}
+
+function crearPanelBienvenida() {
+  if (guestModalEl) return;
+  guestModalEl = document.createElement('div');
+  guestModalEl.className = 'overlay';
+  guestModalEl.hidden = true;
+  guestModalEl.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="authTitle">' +
+    '<div class="sheet-body center">' +
+    '<div class="brand-mark" style="margin-bottom:6px"><span class="m1">moa</span><span class="m2">mercado</span></div>' +
+    '<h2 id="authTitle" style="font-size:21px;margin:0 0 6px">Únete al mercado de Moa</h2>' +
+    '<p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Para ver teléfonos, guardar favoritos, publicar y chatear necesitas una cuenta. Entra con Google o regístrate gratis.</p>' +
+    '<div class="column" style="width:100%;margin-top:16px">' +
+    '<button type="button" class="btn-ghost panel-google" style="width:100%;justify-content:center">Continuar con Google</button>' +
+    '<a href="registro.html" class="btn-cta" style="width:100%">Registrarme gratis</a>' +
+    '<a href="login.html" class="btn-ghost" style="width:100%;justify-content:center">Ya tengo una cuenta</a>' +
+    '</div></div>' +
+    '<button type="button" class="close-btn" aria-label="Cerrar" onclick="window.closeAuth&&closeAuth()">' +
+    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>' +
+    '</div>';
+  guestModalEl.addEventListener('click', (e) => { if (e.target === guestModalEl) closeAuth(); });
+  const gbtn = guestModalEl.querySelector('.panel-google');
+  if (gbtn) gbtn.addEventListener('click', entrarConGoogle);
+  document.body.appendChild(guestModalEl);
+}
+
+window.openAuth = function openAuth() {
+  if (currentUser) { location.href = 'feed.html'; return; }
+  crearPanelBienvenida();
+  guestModalEl.hidden = false;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => guestModalEl.classList.add('open'), 10);
+};
+
+window.closeAuth = function closeAuth() {
+  if (!guestModalEl || guestModalEl.hidden) return;
+  guestModalEl.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { guestModalEl.hidden = true; }, 200);
+};
+
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAuth(); });
 
 const REPARTOS = ['Centro', 'Atlántico', 'Caribe', 'José Martí', 'La Playa', 'Las Coloradas', 'Los Checos', 'Los Mangos', 'Miraflores', 'Rolo Monterrey', 'Otro municipio'];
 
@@ -179,7 +264,7 @@ function moaFeedCard(pub, session) {
     </div>
     ${secundariosHtml(pub)}
     <div class="pub-footer">
-      <div class="phone-chip">${SVGS.phone} ${session && telefono ? esc(telefono) : `<span class="phone-lock">${SVGS.lock} Ver teléfono</span>`}</div>
+      <div class="phone-chip">${SVGS.phone} ${session && telefono ? esc(telefono) : `<button type="button" class="phone-lock">${SVGS.lock} Ver teléfono</button>`}</div>
       <div class="pub-actions">
         <a href="${urlPub}" class="action-btn">${SVGS.eye} Ver</a>
         ${contacto}
@@ -300,4 +385,8 @@ function bindFav(root) {
 function bindGrid(root) {
   bindKebab(root);
   bindFav(root);
+  root.addEventListener('click', (e) => {
+    const chip = e.target.closest('.phone-lock');
+    if (chip && !currentUser) { e.preventDefault(); openAuth(); }
+  });
 }

@@ -63,11 +63,11 @@ async function esperarSesion() {
   return sesionPromise;
 }
 
-// Pide sesión y redirige a login si no hay (devuelve el usuario o null)
+// Pide sesión y muestra el panel de bienvenida si no hay (devuelve el usuario o null)
 async function pedirLogin() {
   await esperarSesion();
   if (!currentUser) {
-    location.href = 'login.html';
+    if (typeof window.openAuth === 'function') { openAuth(); } else { location.href = 'login.html'; }
     return null;
   }
   return currentUser;

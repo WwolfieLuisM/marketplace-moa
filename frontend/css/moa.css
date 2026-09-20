@@ -905,7 +905,7 @@ hr.dashed{border:none;border-top:1px dashed var(--paper-line)}
 .badge-ready{background:rgba(46,125,79,.16);color:var(--success)}
 .badge-paused{background:rgba(232,178,61,.18);color:#A97823}
 .status-chip.sold{color:#D98F8A}
-.phone-lock{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-weight:700;background:rgba(34,40,31,.06);padding:4px 9px;border-radius:6px;font-size:11px}
+.phone-lock{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-weight:700;background:rgba(34,40,31,.06);padding:4px 9px;border-radius:6px;font-size:11px;border:0;cursor:pointer;font-family:inherit}
 
 /* ── back-link / info-note ── */
 .back-link{

@@ -61,7 +61,7 @@
     const urlChat = `conversacion.html?user=${pub.vendedor ? pub.vendedor.userId : ''}`;
     const contacto = sesion
       ? `<a href="${urlChat}" class="btn-cta btn-block">Contactar al vendedor</a>`
-      : `<button class="btn-cta btn-block" onclick="location.href='login.html'">Inicia sesión para contactar</button>`;
+      : `<button type="button" class="btn-cta btn-block" onclick="openAuth()">Inicia sesión para contactar</button>`;
 
     let html = `
     <a class="vendedor-banner" href="vendedor.html?user=${pub.vendedor ? pub.vendedor.userId : ''}">
