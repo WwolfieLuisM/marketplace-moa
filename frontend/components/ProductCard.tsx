@@ -2,144 +2,169 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { FeedPublicacion, Producto } from "@/lib/types";
+import type { FeedPublicacion } from "@/lib/types";
 import { tiempoRelativo } from "@/lib/fecha";
-import { IconBox, IconHeart, IconLocation } from "./icons";
+import { useAuth } from "@/lib/auth";
+import { IconChat, IconEye, IconHeart, IconLocation } from "@/components/icons";
 
 function nombreVendedor(pub: FeedPublicacion) {
-  if (!pub.vendedor?.user) return "Vendedor";
-  const { nombre, apellidos } = pub.vendedor.user;
-  return [nombre, apellidos].filter(Boolean).join(" ");
+  const u = pub.vendedor?.user;
+  if (!u?.nombre) return "Vendedor";
+  return [u.nombre, u.apellidos].filter(Boolean).join(" ");
 }
 
-function fotoPrincipal(pub: FeedPublicacion) {
+function iniciales(n: string) {
+  const partes = n.trim().split(/\s+/).filter(Boolean);
+  return ((partes[0]?.[0] || "") + (partes[1]?.[0] || "")).toUpperCase();
+}
+
+function fotoPrincipalDe(pub: FeedPublicacion): string | null {
   for (const prod of pub.productos) {
-    if (prod.fotos?.length) return prod.fotos[0].url;
+    const foto = prod.fotos?.[0];
+    if (foto?.url) return foto.url;
   }
   return null;
 }
 
-function BadgeDisponible({ producto }: { producto: Producto }) {
-  const disponible = producto.estado === "activo" && producto.cantidad > 0;
-  return (
-    <span
-      className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${
-        disponible ? "text-success" : "text-slate-muted"
-      }`}
-    >
-      {disponible ? "Disponible" : "Agotado"}
-    </span>
-  );
+function prodPrincipal(pub: FeedPublicacion) {
+  return pub.productos[0];
+}
+
+function otrosProductos(pub: FeedPublicacion) {
+  return pub.productos.slice(1).slice(0, 3);
+}
+
+function numVendedor(pub: FeedPublicacion): string | null {
+  const t = pub.telefonoMovil || pub.telefonoFijo;
+  return t && t.trim() ? t.trim() : null;
 }
 
 export default function ProductCard({
   publicacion,
-  logueado,
+  logueado: logueadoProp,
   esFavorito,
   onToggleFavorito,
 }: {
   publicacion: FeedPublicacion;
-  logueado: boolean;
+  logueado?: boolean;
   esFavorito?: (productoId: string) => boolean;
   onToggleFavorito?: (productoId: string) => void;
 }) {
   const router = useRouter();
-  const foto = fotoPrincipal(publicacion);
+  const { usuario } = useAuth();
+  const logueado = logueadoProp ?? !!usuario;
+  const foto = fotoPrincipalDe(publicacion);
+  const principal = prodPrincipal(publicacion);
+  const otros = otrosProductos(publicacion);
+  const telefono = numVendedor(publicacion);
+  const nombre = nombreVendedor(publicacion);
+  const fav = principal ? esFavorito?.(principal.id) ?? false : false;
 
-  function toggleFavorito(productoId: string) {
+  function toggleFav() {
     if (!logueado) {
       router.push("/login");
       return;
     }
-    onToggleFavorito?.(productoId);
+    if (principal) onToggleFavorito?.(principal.id);
+  }
+
+  function irContacto() {
+    if (!logueado) {
+      router.push("/login");
+      return;
+    }
+    router.push(`/mensajes?publicacion=${publicacion.id}`);
   }
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+    <article className="card">
+      <div className="pub-head">
+        <div className="avatar">{iniciales(nombre)}</div>
+        <div className="pub-meta">
+          <span className="pub-name">{nombre}</span>
+          <div className="pub-sub">
+            <span className="badge badge-active">
+              <svg width="5" height="5" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor" /></svg>
+              Activo
+            </span>
+            <span className="badge badge-zone">
+              <IconLocation width={8} height={8} />
+              {publicacion.reparto || "Moa"}
+            </span>
+            <span className="pub-time">{tiempoRelativo(publicacion.creadoEn)}</span>
+          </div>
+        </div>
+      </div>
+
+      <button className="circle-btn kebab-btn" aria-label="Más opciones">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
+      </button>
+
       {foto ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={foto}
-          alt={publicacion.titulo}
-          className="h-36 w-full object-cover"
-          loading="lazy"
-        />
+        <img src={foto} alt={principal?.nombre || publicacion.titulo} className="thumb" loading="lazy" />
       ) : (
-        <div className="flex h-36 w-full items-center justify-center bg-orange-50 text-brand">
-          <IconBox className="h-10 w-10" />
+        <div className="thumb" style={{ background: "linear-gradient(135deg,#3A2818,#221808)" }}>
+          <div className="thumb-placeholder">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+            Sin foto aún
+          </div>
         </div>
       )}
 
-      <div className="p-4">
-        <div className="mb-1 flex items-start justify-between gap-2">
-          <h2 className="text-[15px] font-bold leading-snug text-ink">{publicacion.titulo}</h2>
-          <span className="flex shrink-0 items-center gap-1 text-[12px] text-slate-muted">
-            <IconLocation className="h-3.5 w-3.5" />
-            {publicacion.reparto || "—"}
-          </span>
+      <button
+        className={`heart-btn${fav ? " active" : ""}`}
+        aria-label={fav ? "Quitar de guardados" : "Guardar"}
+        aria-pressed={fav}
+        onClick={toggleFav}
+      >
+        <IconHeart width={18} height={18} fill={fav ? "currentColor" : "none"} />
+      </button>
+
+      <div className="primary-prod">
+        <div className="primary-prod-title">{principal?.nombre || publicacion.titulo}</div>
+        <div className="primary-prod-row">
+          <div className="primary-prod-price">{principal?.precio ? `${principal.precio} CUP` : "—"}</div>
+          {otros.length > 0 && <span className="prod-count-lbl">+ {otros.length} productos más</span>}
         </div>
-        <p className="mb-3 flex items-center gap-1.5 text-[13px] text-slate-muted">
-          <span className="truncate">{nombreVendedor(publicacion)}</span>
-          <span className="text-slate-300">·</span>
-          <span className="shrink-0">{tiempoRelativo(publicacion.creadoEn)}</span>
-        </p>
+      </div>
 
-        <ul className="mb-4 flex flex-col gap-2">
-          {publicacion.productos.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between gap-2 rounded-lg bg-surface px-3 py-2"
-            >
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5">
-                  <span className="truncate text-[13px] font-semibold text-ink">{p.nombre}</span>
-                  <BadgeDisponible producto={p} />
-                </p>
-                {p.categoria && (
-                  <p className="text-[11px] text-slate-muted">{p.categoria.nombre}</p>
-                )}
+      {otros.length > 0 && (
+        <div className="secondary-wrap">
+          <div className="secondary-lbl">También en esta publicación</div>
+          <div className="secondary-grid">
+            {otros.map((prod) => (
+              <div className="product-mini" key={prod.id}>
+                <div className="product-mini-image" style={{ background: "linear-gradient(135deg,#2E3A22,#1C2412)" }}>
+                  <div className="mini-placeholder">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                  </div>
+                </div>
+                <div className="product-mini-info">
+                  <div className="product-mini-title">{prod.nombre}</div>
+                  <div className="product-mini-price">{prod.precio} CUP</div>
+                  <div className="product-mini-status">Disponible</div>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <span className="text-[13px] font-bold text-brand">{p.precio} CUP</span>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleFavorito(p.id);
-                  }}
-                  aria-label={
-                    esFavorito?.(p.id) ? "Quitar de guardados" : "Guardar en favoritos"
-                  }
-                  aria-pressed={esFavorito?.(p.id) ?? false}
-                  className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
-                    esFavorito?.(p.id)
-                      ? "text-brand"
-                      : "text-slate-400 hover:text-brand"
-                  }`}
-                >
-                  <IconHeart
-                    className="h-[17px] w-[17px]"
-                    fill={esFavorito?.(p.id) ? "currentColor" : "none"}
-                  />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
+      )}
 
-        <div className="flex gap-2">
-          <Link
-            href={`/publicaciones/${publicacion.id}`}
-            className="flex-1 rounded-[10px] border-[1.5px] border-line px-3 py-2 text-center text-[13px] font-semibold text-slate-700 hover:border-slate-300"
-          >
+      <div className="pub-footer">
+        <div className="phone-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 012 4.18 2 2 0 014 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>
+          {telefono || "Sin número"}
+        </div>
+        <div className="pub-actions">
+          <Link href={`/publicaciones/${publicacion.id}`} className="action-btn">
+            <IconEye width={13} height={13} />
             Ver
           </Link>
-          <Link
-            href={logueado ? `/mensajes?publicacion=${publicacion.id}` : "/login"}
-            className="flex-1 rounded-[10px] bg-brand px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-brand-dark"
-          >
-            Contactar vendedor
-          </Link>
+          <button className="action-btn primary" onClick={irContacto}>
+            <IconChat width={13} height={13} />
+            Contactar
+          </button>
         </div>
       </div>
     </article>

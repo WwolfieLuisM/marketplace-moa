@@ -21,9 +21,13 @@ import { useAuth } from "@/lib/auth";
 import { useFavoritos } from "@/lib/favoritos";
 import { sintetizarPublicacion } from "@/lib/feed";
 import { REPARTOS_MOA } from "@/lib/types";
-import type { Categoria, FeedPublicacion, ProductoResultado } from "@/lib/types";
+import type {
+  Categoria,
+  FeedPublicacion,
+  ProductoResultado,
+} from "@/lib/types";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 const ICONOS_CATEGORIA: Record<string, ComponentType<{ className?: string }>> = {
   Alimentos: IconAlimento,
@@ -53,13 +57,11 @@ export default function FeedPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
-          <h1 className="text-2xl font-bold text-ink sm:text-[28px]">
-            ¿Qué estás buscando en Moa?
-          </h1>
-          <p className="mt-1 text-[14px] text-slate-muted">
-            Publicaciones de comercios y vendedores del municipio.
-          </p>
+        <main className="moa-board main-page">
+          <section className="welcome">
+            <h1>¿Qué estás buscando en Moa?</h1>
+            <p>Publicaciones de comercios y vendedores del municipio.</p>
+          </section>
         </main>
       }
     >
@@ -108,7 +110,9 @@ function ContenidoFeed() {
           if (categoriaId) params.set("categoria", categoriaId);
           if (orden) params.set("orden", orden);
           params.set("page", String(n));
-          const data = await api.get<{ feed: FeedPublicacion[]; page: number }>(`/feed?${params}`);
+          const data = await api.get<{ feed: FeedPublicacion[]; page: number }>(
+            `/feed?${params}`
+          );
           if (id !== reqId.current) return;
           setPublicaciones((prev) => (append ? unir(prev, data.feed) : data.feed));
           setHayMas(data.feed.length === PAGE_SIZE);
@@ -147,11 +151,13 @@ function ContenidoFeed() {
     void cargarPagina(1, false);
   }, [vista, qAplicada, reparto, categoriaId, orden, cargarPagina]);
 
+  const [categoriasData, setCategoriasData] = useState<Categoria[]>([]);
+
   useEffect(() => {
     api
       .get<{ categorias: Categoria[] }>("/feed/categorias")
-      .then((d) => setCategorias(d.categorias))
-      .catch(() => setCategorias([]));
+      .then((d) => setCategoriasData(d.categorias))
+      .catch(() => setCategoriasData([]));
   }, []);
 
   // la ruta viene con ?buscar=1 desde el nav móvil: enfoca y abre el buscador
@@ -177,97 +183,84 @@ function ContenidoFeed() {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8">
-        <h1 className="text-2xl font-bold text-ink sm:text-[28px]">
-          ¿Qué estás buscando en Moa?
-        </h1>
-        <p className="mt-1 text-[14px] text-slate-muted">
-          Publicaciones de comercios y vendedores del municipio.
-        </p>
+      <main className="moa-board main-page">
+        <section className="welcome">
+          <h1>¿Qué estás buscando en Moa?</h1>
+          <p>Publicaciones de comercios y vendedores del municipio.</p>
+        </section>
 
-<div className="mt-6 space-y-3">
-          <div className="relative">
-            <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <section className="search-row">
+          <div className="search-box">
+            <IconSearch />
             <input
               ref={buscarRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar producto (ej. arroz, pollo, medicamento)"
-              className="h-12 w-full rounded-xl border border-line bg-white pl-11 pr-4 text-[14px] text-ink outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-orange-100"
             />
           </div>
+        </section>
 
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {categorias
+        <div className="cat-row">
+          {categoriasData
+            .filter((c) => c.nombre !== "Test Job")
+            .map((c) => {
+              const Icono = ICONOS_CATEGORIA[c.nombre] || IconBox;
+              const activa = categoriaId === String(c.id);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => aplicarFiltro("categoria", activa ? "" : String(c.id))}
+                  className={`cat ${activa ? "active" : ""}`}
+                >
+                  <Icono className="icon" />
+                  <span>{c.nombre}</span>
+                </button>
+              );
+            })}
+        </div>
+
+        <div className="filters-row">
+          <select
+            value={reparto}
+            onChange={(e) => aplicarFiltro("reparto", e.target.value)}
+            className="select-board"
+          >
+            <option value="">Todos los repartos</option>
+            {REPARTOS_MOA.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+          <select
+            value={categoriaId}
+            onChange={(e) => aplicarFiltro("categoria", e.target.value)}
+            className="select-board"
+          >
+            <option value="">Todas las categorías</option>
+            {categoriasData
               .filter((c) => c.nombre !== "Test Job")
-              .map((c) => {
-                const Icono = ICONOS_CATEGORIA[c.nombre] || IconBox;
-                const activa = categoriaId === String(c.id);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => aplicarFiltro("categoria", activa ? "" : String(c.id))}
-                    className={`flex h-[70px] w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border transition-colors ${
-                      activa
-                        ? "border-brand bg-brand text-white"
-                        : "border-line bg-white text-slate-600 hover:border-slate-300"
-                    }`}
-                  >
-                    <Icono className="h-6 w-6" />
-                    <span
-                      className={`w-full truncate px-1 text-center text-[11px] font-semibold ${
-                        activa ? "text-white" : "text-slate-600"
-                      }`}
-                    >
-                      {c.nombre}
-                    </span>
-                  </button>
-                );
-              })}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
+              .map((c) => (
+                <option key={c.id} value={String(c.id)}>
+                  {c.nombre}
+                </option>
+              ))}
+          </select>
+          {vista !== "busqueda" && (
             <select
-              value={reparto}
-              onChange={(e) => aplicarFiltro("reparto", e.target.value)}
-              className="h-11 rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand"
+              value={orden}
+              onChange={(e) => setOrden(e.target.value)}
+              className="sort-select"
             >
-              <option value="">Todos los repartos</option>
-              {REPARTOS_MOA.map((r) => (
-                <option key={r} value={r}>
-                  {r}
+              {OPCIONES_ORDEN.map((o) => (
+                <option key={o.valor} value={o.valor}>
+                  Ordenar: {o.etiqueta}
                 </option>
               ))}
             </select>
-            <select
-              value={categoriaId}
-              onChange={(e) => aplicarFiltro("categoria", e.target.value)}
-              className="h-11 rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand"
-            >
-              <option value="">Todas las categorías</option>
-              {categorias
-                .filter((c) => c.nombre !== "Test Job")
-                .map((c) => (
-                  <option key={c.id} value={String(c.id)}>
-                    {c.nombre}
-                  </option>
-                ))}
-            </select>
-            {vista !== "busqueda" && (
-              <select
-                value={orden}
-                onChange={(e) => setOrden(e.target.value)}
-                className="h-11 rounded-xl border border-line bg-white px-3 text-[14px] text-ink outline-none focus:border-brand"
-              >
-                {OPCIONES_ORDEN.map((o) => (
-                  <option key={o.valor} value={o.valor}>
-                    Ordenar: {o.etiqueta}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          )}
         </div>
 
         <ErrorBanner message={error} />

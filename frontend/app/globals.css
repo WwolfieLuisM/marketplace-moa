@@ -1,6 +1,12 @@
 @import "tailwindcss";
+/* sistema de diseño vanilla Moa — base global igual al prototipo (board+chalk+Caveat) */
+@import "../moa.css";
+/* Sistema de diseño vanilla Moa (look tablero/papel) — fuente única del look.
+   Se importa global como en el vanilla (todas las páginas enlazan moa.css). */
+@import "../moa.css";
 
 @theme {
+  /* ── paleta original (marketplace-moa) ── */
   --color-brand: #ea580c;
   --color-brand-dark: #c2410c;
   --color-brand-light: #fdba74;
@@ -10,11 +16,115 @@
   --color-surface: #f8fafc;
   --color-avatar: #fed7aa;
   --color-success: #16a34a;
+
+  /* ── tokens vanilla (look prototipo, reutilizables como clases) ── */
+  --color-board: #1f3b32;
+  --color-board-deep: #14281f;
+  --color-board-line: rgba(245, 239, 221, 0.14);
+  --color-chalk: #f5efdd;
+  --color-chalk-dim: #b9c9be;
+  --color-paper: #fbf7ec;
+  --color-paper-line: #e3dcc5;
+  --color-ink-soft: #5c665a;
+  --color-tag: #d94f3d;
+  --color-tag-dark: #b53f30;
+  --color-marker: #e8b23d;
+
+  --font-caveat: "Caveat", "Work Sans", cursive;
 }
 
 html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--color-surface);
   color: var(--color-ink);
+}
+
+/* ══ utilitarias vanilla (look moa v4): aplicadas donde la página lo pida ══ */
+
+/* superficie "tablero" con textura de puntos + fondo profundo */
+.moa-board {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(245, 239, 221, 0.05) 1px, transparent 1.5px) 0 0/16px 16px,
+    var(--color-board);
+  color: var(--color-chalk);
+}
+.moa-board-deep {
+  background: var(--color-board-deep);
+  color: var(--color-chalk);
+}
+
+/* marca + tipografías */
+.moa-caveat {
+  font-family: "Caveat", cursive;
+}
+.moa-brand {
+  font-family: "Caveat", cursive;
+  font-weight: 700;
+  color: var(--color-chalk);
+}
+.moa-brand-accent {
+  font-family: "Caveat", cursive;
+  font-weight: 700;
+  color: var(--color-tag);
+}
+
+/* tarjeta estilo "papel" del feed */
+.moa-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-paper-line);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(10, 20, 15, 0.28);
+}
+.moa-avatar {
+  background: var(--color-board);
+  color: var(--color-chalk);
+  border: 1.5px solid rgba(245, 239, 221, 0.2);
+}
+.moa-pub-head {
+  border-bottom: 1px dashed var(--color-paper-line);
+}
+
+/* etiquetas/badges */
+.moa-badge-active {
+  background: rgba(46, 125, 79, 0.16);
+  color: var(--color-success);
+}
+.moa-badge-guest {
+  background: rgba(232, 178, 61, 0.16);
+  color: #a97823;
+}
+
+/* botones */
+.moa-btn-dashed {
+  border: 1.5px dashed var(--color-chalk-dim);
+  color: var(--color-chalk);
+}
+.moa-btn-tag {
+  background: var(--color-tag);
+  color: #fff;
+}
+.moa-btn-tag:hover {
+  background: var(--color-tag-dark);
+}
+
+/* texto sobre tabla */
+.moa-chalk-dim {
+  color: var(--color-chalk-dim);
+}
+.moa-slate-emoji {
+  color: var(--color-slate-muted);
+}
+
+/* versión vanilla: cuerpo con tablero verde */
+body.vanilla-body {
+  background:
+    radial-gradient(
+      circle at 1px 1px,
+      rgba(245, 239, 221, 0.05) 1px,
+      transparent 1.5px
+    ) 0 0/16px 16px,
+    var(--color-board);
+  color: var(--color-chalk);
 }
