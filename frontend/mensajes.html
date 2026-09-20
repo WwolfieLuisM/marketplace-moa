@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Mensajes — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+  <div class="feed-hdr"><h2>Mensajes</h2></div>
+  <div id="lista"></div>
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initMensajes() {
+  const lista = document.getElementById('lista');
+  const recorte = (t) => (t && t.length > 72 ? t.slice(0, 72) + '…' : t || '');
+
+  async function render() {
+    lista.innerHTML = '<div class="grid-skeleton">Cargando conversaciones…</div>';
+    try {
+      const { conversaciones } = await api.get('/mensajes/conversaciones');
+      if (!conversaciones.length) {
+        lista.innerHTML = `
+          <div class="card center" style="padding:34px">
+            <p style="color:var(--ink-soft);font-size:14px">Todavía no tienes conversaciones.<br>Contacta a un vendedor desde cualquier producto.</p>
+            <a href="feed.html" class="btn-cta" style="margin-top:14px">Ver el feed</a>
+          </div>`;
+        return;
+      }
+      lista.innerHTML = conversaciones.map((c) => {
+        const u = c.otroUsuario || {};
+        const m = c.ultimoMensaje || {};
+        const yo = m.remitenteId === currentUser.id;
+        return `
+        <a class="convo" href="conversacion.html?user=${c.otroUsuarioId}">
+          ${avatarHtml(u)}
+          <div class="convo-info">
+            <div class="convo-top">
+              <span class="convo-name">${esc([u.nombre, u.apellidos].filter(Boolean).join(' ')) || 'Usuario'}</span>
+              ${m.creadoEn ? `<span class="convo-time">${relTime(m.creadoEn)}</span>` : ''}
+            </div>
+            <div class="convo-last">${yo ? 'Tú: ' : ''}${esc(recorte(m.contenido))}</div>
+          </div>
+          ${c.noLeidos ? `<span class="convo-unread">${c.noLeidos}</span>` : ''}
+        </a>`;
+      }).join('');
+    } catch (e) {
+      lista.innerHTML = '<div class="grid-skeleton">No se pudieron cargar los mensajes.</div>';
+    }
+  }
+
+  esperarSesion().then((u) => { if (!u) { location.href = 'login.html'; return; } render(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Detalle de publicación — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+
+  <a href="feed.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3l-5 5 5 5"/></svg>
+    Volver al feed
+  </a>
+
+  <div id="vista"></div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initPublicacion() {
+  const vista = document.getElementById('vista');
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { vista.innerHTML = '<div class="grid-skeleton">Publicación no encontrada.</div>'; return; }
+
+  function galeriaHtml(producto) {
+    const fotos = (producto.fotos || []).map(fotoUrl).filter(Boolean);
+    if (!fotos.length) {
+      return `<div class="detail-main-img" style="background:${gradiente(producto.nombre)}"><div class="thumb-placeholder">${SVGS.place}<span>Sin foto aún</span></div></div>`;
+    }
+    const principal = fotos[0];
+    const thumbs = fotos.slice(0, 3).map((f, i) => `<div class="detail-thumb${i === 0 ? ' active' : ''}" data-src="${f}"><img src="${f}" alt=""></div>`).join('');
+    return `<div class="detail-main-img" style="background:#16202a"><img id="mainFoto" src="${principal}" alt=""></div><div class="detail-thumbs">${thumbs}</div>`;
+  }
+
+  function renderMaterial(pub, sesion) {
+    const prods = pub.productos || [];
+    const principal = prods[0];
+    const vendedor = (pub.vendedor && pub.vendedor.user) || {};
+    const otros = prods.slice(1);
+    const telefono = pub.telefonoMovil || pub.telefonoFijo;
+    const urlChat = `conversacion.html?user=${pub.vendedor ? pub.vendedor.userId : ''}`;
+    const contacto = sesion
+      ? `<a href="${urlChat}" class="btn-cta btn-block">Contactar al vendedor</a>`
+      : `<button class="btn-cta btn-block" onclick="location.href='login.html'">Inicia sesión para contactar</button>`;
+
+    let html = `
+    <a class="vendedor-banner" href="vendedor.html?user=${pub.vendedor ? pub.vendedor.userId : ''}">
+      ${avatarHtml(vendedor)}
+      <div>
+        <div class="vendedor-name">${esc(nombreCompleto(vendedor))}</div>
+        <div class="vendedor-meta">
+          <span class="pub-time">Publicado ${relTime(pub.creadoEn)}</span>
+          <span class="pub-time"> · ${esc(pub.reparto || '—')}</span>
+          ${telefono ? `<span class="pub-time"> · ${esc(telefono)}</span>` : ''}
+        </div>
+      </div>
+      <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg>
+    </a>`;
+
+    if (!principal) {
+      html += `<article class="card" style="margin-top:14px"><div class="primary-prod-title">${esc(pub.titulo)}</div><p style="font-size:13.5px;color:var(--ink-soft)">Esta publicación no tiene productos visibles.</p></article>`;
+    } else {
+      html += `
+    <article class="detail-card">
+      <div class="detail-gallery">${galeriaHtml(principal)}</div>
+      <div class="detail-body">
+        <div class="detail-title-row">
+          <h1>${esc(principal.nombre)}</h1>
+          ${sesion ? heartHtml(true, principal.id) : ''}
+        </div>
+        <div class="detail-tags">
+          <span class="badge badge-zone">${SVGS.zone} ${esc(pub.reparto || '—')}</span>
+          ${principal.categoria ? `<span class="badge badge-zone">${esc(principal.categoria.nombre)}</span>` : ''}
+          ${pub.conDomicilio ? '<span class="badge badge-ready">Entrega a domicilio</span>' : ''}
+        </div>
+        <div class="detail-price">${fmtPrecio(principal.precio)} CUP</div>
+        <div class="detail-desc">
+          <h3>Sobre este producto</h3>
+          <p>${esc(principal.descripcion || 'Sin descripción.')}</p>
+          <div class="detail-feats">
+            <span>${SVGS.zone} ${esc(pub.reparto || '—')}</span>
+            <span>${chipEstadoProducto(principal.estado)}</span>
+            <span>${fmtPrecio(principal.cantidad)} disponibles</span>
+          </div>
+        </div>
+        ${contacto}
+      </div>
+    </article>`;
+    }
+
+    if (otros.length) {
+      html += `
+    <section class="otra-sec">
+      <div class="feed-hdr"><h2>Otros productos en esta publicación</h2></div>
+      ${otros.map((p) => `
+        <div class="product-mini">
+          ${fotoMiniHtml(p)}
+          <div class="product-mini-info">
+            <div class="product-mini-title">${esc(p.nombre)}</div>
+            <div class="product-mini-price">${fmtPrecio(p.precio)} CUP</div>
+            <div class="product-mini-status">${p.estado === 'activo' ? 'Disponible' : 'Vendido'}</div>
+          </div>
+        </div>`).join('')}
+    </section>`;
+    }
+
+    vista.innerHTML = html;
+    bindFav(vista);
+
+    const mainFoto = document.getElementById('mainFoto');
+    vista.querySelectorAll('.detail-thumb[data-src]').forEach((t) => {
+      t.addEventListener('click', () => {
+        vista.querySelectorAll('.detail-thumb').forEach((x) => x.classList.remove('active'));
+        t.classList.add('active');
+        if (mainFoto) mainFoto.src = t.dataset.src;
+      });
+    });
+  }
+
+  esperarSesion().then((u) => {
+    api.get(`/publicaciones/${id}`).then(({ publicacion }) => {
+      renderMaterial(publicacion, !!u);
+      if (u) marcarFavoritos(vista);
+    }).catch(() => {
+      vista.innerHTML = '<div class="grid-skeleton">Publicación no encontrada o ya no está activa.</div>';
+    });
+  });
+})();
+</script>
+</body>
+</html>

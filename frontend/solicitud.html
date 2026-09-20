@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Solicitud de vendedor — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page main-narrow">
+
+  <a href="perfil.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3l-5 5 5 5"/></svg>
+    Volver a mi perfil
+  </a>
+
+  <div class="feed-hdr"><h2>Solicitar licencia de vendedor</h2></div>
+
+  <div class="info-note">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><path d="M10 9.5V14M10 6.2v.2"/></svg>
+    <p>Con la licencia aprobada podrás publicar un máximo de <strong>5 productos al día</strong> y <strong>10 en total</strong> en el plan demo, con hasta <strong>3 fotos</strong> por producto. Un administrador revisará tu solicitud.</p>
+  </div>
+
+  <form id="solicitudForm" class="form-paper" novalidate>
+
+    <label class="field">
+      <span class="field-label">Tipo de vendedor</span>
+      <select name="tipo" class="select-board" id="fTipo" required>
+        <option value="">Selecciona el tipo...</option>
+        <option value="individual">Individual (persona natural)</option>
+        <option value="tcp">TCP (trabajador por cuenta propia)</option>
+        <option value="empresa_estatal">Empresa estatal</option>
+      </select>
+    </label>
+
+    <div class="row2">
+      <label class="field">
+        <span class="field-label">Nombre</span>
+        <input type="text" name="nombre" id="fNombre" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Apellidos</span>
+        <input type="text" name="apellidos" id="fApellidos" required>
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Número de carné de identidad</span>
+      <input type="text" name="numeroCi" id="fCi" placeholder="Ej: 92010112345" maxlength="30" required>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Reparto</span>
+      <select name="reparto" class="select-board" id="fReparto" required></select>
+    </label>
+
+    <label class="field" id="negocioWrap">
+      <span class="field-label">Nombre del negocio</span>
+      <input type="text" name="nombreNegocio" id="fNegocio" placeholder="Ej: Moda Express Moa">
+    </label>
+
+    <label class="field">
+      <span class="field-label">Categoría o giro del negocio</span>
+      <input type="text" name="categoriaNegocio" id="fCategoria" placeholder="Ej: Ropa y calzado">
+    </label>
+
+    <div class="row2">
+      <label class="field">
+        <span class="field-label">Horario de atención</span>
+        <input type="text" name="horarioAtencion" id="fHorario" placeholder="Ej: L-D 8am-6pm">
+      </label>
+      <label class="field">
+        <span class="field-label">Dirección física</span>
+        <input type="text" name="direccionFisica" id="fDireccion" placeholder="Calle, número, barrio">
+      </label>
+    </div>
+
+    <label class="checkbox-field">
+      <input type="checkbox" name="terminos" required>
+      <span>Confirmo que la información es real y acepto las reglas de uso del mercado de Moa.</span>
+    </label>
+
+    <div class="form-msg" id="formMsg" hidden></div>
+
+    <button type="submit" class="btn-cta btn-block">
+      <span class="btn-label">Enviar solicitud</span>
+      <span class="btn-spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+    </button>
+  </form>
+
+  <!-- MODAL ÉXITO -->
+  <div class="overlay" id="okModal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="okTitle">
+      <div class="sheet-body center">
+        <div class="ok-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg>
+        </div>
+        <h2 id="okTitle" style="font-size:20px;margin:0 0 6px">Solicitud enviada</h2>
+        <p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Tu solicitud será revisada por un administrador. Te avisaremos cuando sea aprobada.</p>
+        <a href="perfil.html" class="btn-cta" style="width:100%;justify-content:center">Entendido</a>
+      </div>
+      <button class="close-btn" aria-label="Cerrar" onclick="location.href='perfil.html'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initSolicitud() {
+  const rep = document.getElementById('fReparto');
+  REPARTOS.forEach((r) => {
+    const o = document.createElement('option');
+    o.value = r; o.textContent = r;
+    rep.appendChild(o);
+  });
+
+  const fTipo = document.getElementById('fTipo');
+  const negocioWrap = document.getElementById('negocioWrap');
+  function toggleNegocio() {
+    negocioWrap.style.display = fTipo.value === 'individual' ? 'none' : 'flex';
+  }
+  fTipo.addEventListener('change', toggleNegocio);
+  toggleNegocio();
+
+  const msg = document.getElementById('formMsg');
+  function mostrarMsg(texto, ok) {
+    msg.hidden = false;
+    msg.textContent = texto;
+    msg.style.color = ok ? 'var(--success)' : 'var(--danger,#D9805F)';
+  }
+
+  const form = document.getElementById('solicitudForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    try {
+      await api.post('/vendedores/solicitud', {
+        tipo: fTipo.value,
+        nombre: document.getElementById('fNombre').value.trim(),
+        apellidos: document.getElementById('fApellidos').value.trim(),
+        numeroCi: document.getElementById('fCi').value.trim(),
+        reparto: document.getElementById('fReparto').value,
+        nombreNegocio: document.getElementById('fNegocio').value.trim() || null,
+        categoriaNegocio: document.getElementById('fCategoria').value.trim() || null,
+        horarioAtencion: document.getElementById('fHorario').value.trim() || null,
+        direccionFisica: document.getElementById('fDireccion').value.trim() || null,
+      });
+      const modal = document.getElementById('okModal');
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => modal.classList.add('open'), 10);
+    } catch (err) {
+      mostrarMsg(err.message || 'No se pudo enviar la solicitud', false);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  });
+
+  esperarSesion().then((u) => { if (!u) { location.href = 'login.html'; return; } });
+})();
+</script>
+</body>
+</html>

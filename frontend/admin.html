@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Panel de administración — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+  <div class="feed-hdr">
+    <h2>Panel de administración</h2>
+  </div>
+
+  <div class="admin-summary" id="resumen">
+    <div class="grid-skeleton">Cargando resumen…</div>
+  </div>
+
+  <div class="feed-hdr" style="margin-top:22px">
+    <h3 style="margin:0">Vendedores pendientes de aprobación</h3>
+    <a href="admin-vendedores.html" class="btn-ghost" style="height:38px;padding:0 12px;font-size:13px">Gestionar vendedores</a>
+  </div>
+  <div id="pendientes" class="pub-admin-list"></div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initAdmin() {
+  const resumen = document.getElementById('resumen');
+  const pendientes = document.getElementById('pendientes');
+
+  const TARJETAS = [
+    ['usuarios', 'Usuarios'],
+    ['vendedores', 'Vendedores'],
+    ['licenciasActivas', 'Licencias activas'],
+    ['vendedoresPendientes', 'Pendientes'],
+    ['publicaciones', 'Publicaciones'],
+    ['productos', 'Productos'],
+    ['mensajes', 'Mensajes'],
+    ['favoritos', 'Favoritos'],
+    ['reportes', 'Reportes'],
+  ];
+
+  async function render() {
+    try {
+      const d = await api.get('/admin/resumen');
+      resumen.innerHTML = TARJETAS.map(([key, lbl]) => `
+        <a class="card-card" ${key === 'vendedoresPendientes' ? 'href="admin-vendedores.html"' : ''}>
+          <div class="card-num">${d[key] ?? '—'}</div>
+          <div class="card-lbl">${lbl}</div>
+        </a>`).join('');
+
+      const { perfiles } = await api.get('/vendedores?estadoLicencia=pendiente');
+      const pend = perfiles.slice(0, 5);
+      pendientes.innerHTML = pend.length
+        ? pend.map((p) => `
+          <div class="pub-admin-item">
+            <div class="pub-admin-main">
+              <a class="pub-admin-title" href="admin-vendedores.html">${esc([p.user.nombre, p.user.apellidos].filter(Boolean).join(' '))}</a>
+              <div class="pub-admin-meta"><span class="badge badge-demo">pendiente</span> <span>${esc(p.user.email)}</span></div>
+            </div>
+            <div class="pub-admin-actions"><a class="btn-ghost btn-sm" href="admin-vendedores.html">Revisar</a></div>
+          </div>`).join('')
+        : '<div class="grid-skeleton">No hay solicitudes pendientes. :)</div>';
+    } catch (e) {
+      resumen.innerHTML = '<div class="grid-skeleton">No tienes permisos de administrador.</div>';
+    }
+  }
+
+  esperarSesion().then((u) => {
+    if (!u) { location.href = 'login.html'; return; }
+    if (u.rol !== 'admin') {
+      resumen.innerHTML = '<div class="grid-skeleton">No tienes permisos de administrador.</div>';
+      return;
+    }
+    render();
+  });
+})();
+</script>
+</body>
+</html>

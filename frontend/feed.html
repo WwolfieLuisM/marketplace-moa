@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Marketplace Moa — Feed</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+
+  <section class="welcome">
+    <h1>¿Qué andas buscando hoy?</h1>
+    <p>Compra y vende en Moa, Holguín — directo entre vecinos.</p>
+  </section>
+
+  <section class="search-row">
+    <form class="search-box" id="searchForm" style="flex:1">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8.5" cy="8.5" r="5"/><path d="M12.5 12.5L17 17"/></svg>
+      <input type="search" id="searchInput" placeholder="Buscar producto (ej. arroz, pollo, medicamento)">
+    </form>
+    <button class="filter-btn" type="button" id="clearSearch" hidden>
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </section>
+
+  <div class="cat-row" id="catRow">
+    <button class="cat active" data-id="">Todo</button>
+  </div>
+
+  <div class="feed-hdr">
+    <h2>Publicaciones <span id="pubCount" style="color:var(--chalk-dim);font-weight:400"></span></h2>
+    <div class="feed-tools">
+      <select class="sort-select" id="repartoSelect">
+        <option value="">Todos los repartos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="load-more" id="loadMoreWrap">
+    <button type="button" id="loadMore">Cargar más publicaciones</button>
+  </div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initFeed() {
+  const grid = document.getElementById('grid');
+  const catRow = document.getElementById('catRow');
+  const pubCount = document.getElementById('pubCount');
+  const repartoSelect = document.getElementById('repartoSelect');
+  const loadMoreBtn = document.getElementById('loadMore');
+  const loadMoreWrap = document.getElementById('loadMoreWrap');
+  const searchInput = document.getElementById('searchInput');
+  const searchForm = document.getElementById('searchForm');
+  const clearSearch = document.getElementById('clearSearch');
+
+  let page = 1;
+  let activoCat = '';
+  let activoReparto = '';
+  let busqueda = '';
+  let paginasCargadas = [];
+
+  REPARTOS.forEach((r) => {
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    repartoSelect.appendChild(opt);
+  });
+
+  async function cargarCategorias() {
+    try {
+      const { categorias } = await api.get('/feed/categorias');
+      catRow.innerHTML = '<button class="cat active" data-id="">Todo</button>';
+      categorias.forEach((c) => {
+        const b = document.createElement('button');
+        b.className = 'cat';
+        b.dataset.id = c.id;
+        b.textContent = c.nombre;
+        b.addEventListener('click', () => { activoCat = String(c.id); render(); });
+        catRow.appendChild(b);
+      });
+      catRow.querySelector('[data-id=""]').addEventListener('click', () => { activoCat = ''; render(); });
+    } catch (e) {
+      catRow.innerHTML = '<button class="cat active" data-id="">Todo</button>';
+    }
+  }
+
+  function estadoVista() {
+    for (const c of catRow.querySelectorAll('.cat')) {
+      c.classList.toggle('active', c.dataset.id === String(activoCat));
+    }
+  }
+
+  async function cargarPagina(append, params) {
+    const qs = new URLSearchParams(params);
+    qs.set('page', String(page));
+    const { feed } = await api.get(`/feed?${qs.toString()}`);
+    paginasCargadas = append ? paginasCargadas.concat(feed) : feed;
+    return feed;
+  }
+
+  async function cargarBusqueda() {
+    const { productos } = await api.get(`/feed/productos?q=${encodeURIComponent(busqueda)}`);
+    return productos.map((p) => moaProdCard(p, !!currentUser, false));
+  }
+
+  async function render(append) {
+    const sesion = !!currentUser;
+    let html;
+    let totalMostrados = 0;
+    try {
+      if (busqueda) {
+        html = await cargarBusqueda();
+        pubCount.textContent = `búsqueda: «${busqueda}»`;
+        paginaUnica();
+      } else {
+        const params = {};
+        if (activoCat) params.categoria = activoCat;
+        if (activoReparto) params.reparto = activoReparto;
+        const feed = await cargarPagina(append, params);
+        totalMostrados = paginasCargadas.length;
+        html = feed.map((p) => moaFeedCard(p, sesion));
+        pubCount.textContent = `(${totalMostrados})`;
+        if (feed.length === 0 && paginasCargadas.length === 0) html = [];
+        loadMoreWrap.style.display = feed.length === 0 ? 'none' : 'block';
+        estadoVista();
+      }
+      if (html.length === 0) {
+        grid.innerHTML = '<div class="grid-skeleton">No hay publicaciones todavía.</div>';
+      } else {
+        grid.innerHTML = html.join('');
+      }
+      bindGrid(grid);
+      marcarFavoritos(grid);
+    } catch (e) {
+      grid.innerHTML = '<div class="grid-skeleton">No se pudo cargar el feed. Intenta de nuevo.</div>';
+      loadMoreWrap.style.display = 'none';
+    }
+    window.dispatchEvent(new CustomEvent('feed-render'));
+  }
+
+  function paginaUnica() {
+    loadMoreWrap.style.display = 'none';
+    clearSearch.hidden = false;
+  }
+
+  loadMoreBtn.addEventListener('click', () => {
+    if (!busqueda) { page += 1; render(true); } else { cargarBusqueda(); }
+  });
+
+  searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    paginasCargadas = [];
+    page = 1;
+    busqueda = searchInput.value.trim();
+    render(false);
+  });
+
+  clearSearch.addEventListener('click', () => {
+    searchInput.value = '';
+    busqueda = '';
+    page = 1;
+    paginasCargadas = [];
+    clearSearch.hidden = true;
+    render(false);
+  });
+
+  repartoSelect.addEventListener('change', () => { activoReparto = repartoSelect.value; page = 1; paginasCargadas = []; render(false); });
+
+  esperarSesion().then(() => { cargarCategorias(); render(false); });
+})();
+</script>
+</body>
+</html>

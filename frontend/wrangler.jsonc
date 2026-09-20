@@ -1,17 +1,8 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"main": ".open-next/worker.js",
-	"name": "moa-frontend",
-	"compatibility_date": "2025-08-01",
-	"compatibility_flags": ["nodejs_compat"],
-	"assets": {
-		"directory": ".open-next/assets",
-		"binding": "ASSETS"
-	},
-	"services": [
-		{
-			"binding": "WORKER_SELF_REFERENCE",
-			"service": "moa-frontend"
-		}
-	]
+  "name": "moa-frontend",
+  "compatibility_date": "2025-09-05",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS"
+  }
 }

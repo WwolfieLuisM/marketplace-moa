@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Crear cuenta — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body class="auth-body">
+
+<div class="window-card window-card-wide">
+  <div class="window-bar">
+    <div class="window-dots"><span class="wd"></span><span class="wd"></span><span class="wd"></span></div>
+    <a href="feed-guest.html">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </a>
+  </div>
+
+  <div class="form-body">
+    <div class="brand-mark"><span class="m1">moa</span><span class="m2">mercado</span></div>
+    <h1 class="form-title">Crea tu cuenta</h1>
+    <p class="form-sub">Únete al mercado de Moa. Es gratis y toma menos de un minuto.</p>
+
+    <form id="regForm" novalidate>
+      <div class="error-box" id="regError">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        <span id="regErrorText"></span>
+      </div>
+      <div class="row2">
+        <label class="field">
+          <span class="field-label">Nombre</span>
+          <input type="text" name="nombre" placeholder="Tu nombre" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Apellidos</span>
+          <input type="text" name="apellidos" placeholder="Tus apellidos" required>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Teléfono</span>
+        <input type="tel" name="telefono" placeholder="5 123 4567" required pattern="[0-9]+" inputmode="numeric">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Correo electrónico</span>
+        <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Contraseña</span>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+          <button type="button" class="eye-btn" aria-label="Mostrar contraseña">
+            <svg class="eye-open" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 10S4 4 10 4s9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="10" cy="10" r="3"/></svg>
+            <svg class="eye-closed" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <span class="pw-hint">Debe tener al menos 6 caracteres, una letra y un número.</span>
+        <span class="field-error" style="display:none">La contraseña no cumple los requisitos: mínimo 6 caracteres, una letra y un número.</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Reparto donde vives</span>
+        <select name="reparto" class="select-board">
+          <option value="">Selecciona un reparto...</option>
+          <option>Centro</option><option>Atlántico</option><option>Caribe</option>
+          <option>José Martí</option><option>La Playa</option><option>Las Coloradas</option>
+          <option>Los Checos</option><option>Los Mangos</option><option>Miraflores</option>
+          <option>Rolo Monterrey</option><option>Otro municipio</option>
+        </select>
+      </label>
+
+      <button type="submit" class="btn-cta btn-block">
+        <span class="btn-label">Crear cuenta</span>
+        <span class="btn-spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+      </button>
+    </form>
+
+    <div class="divider">o regístrate con Google</div>
+
+    <div id="googleButton" class="gis-slot"></div>
+
+    <button class="btn-google" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23Z"/><path fill="#FBBC05" d="M5.84 14.09a6.6 6.6 0 010-4.18V7.07H2.18a11 11 0 000 9.86l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 002 7.07l3.84 2.84C6.71 7.31 9.14 5.38 12 5.38Z"/></svg>
+      Continuar con Google
+    </button>
+
+    <p class="form-footer">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/gsi.js"></script>
+
+<script>
+const form = document.getElementById('regForm');
+const pw = form.querySelector('input[name="password"]');
+const hint = form.querySelector('.pw-hint');
+const err = form.querySelector('.field-error');
+const regError = document.getElementById('regError');
+const regErrorText = document.getElementById('regErrorText');
+
+function validatePassword(v) {
+  return v.length >= 6 && /[A-Za-z]/.test(v) && /[0-9]/.test(v);
+}
+
+function check() {
+  const ok = validatePassword(pw.value);
+  if (pw.value.length > 0 && !ok) {
+    err.style.display = 'inline-block';
+    pw.style.borderColor = 'var(--tag)';
+    hint.style.display = 'none';
+    return false;
+  }
+  err.style.display = 'none';
+  pw.style.borderColor = '';
+  if (pw.value.length > 0) hint.style.display = 'none';
+  return true;
+}
+
+pw.addEventListener('input', check);
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  regError.classList.remove('visible');
+  if (!check()) { pw.focus(); return; }
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  try {
+    const body = {
+      nombre: form.querySelector('input[name="nombre"]').value.trim(),
+      apellidos: form.querySelector('input[name="apellidos"]').value.trim(),
+      email: form.querySelector('input[name="email"]').value.trim(),
+      telefono: form.querySelector('input[name="telefono"]').value.trim(),
+      password: pw.value,
+      reparto: form.querySelector('select[name="reparto"]').value || null,
+    };
+    const data = await api.post('/auth/register', body);
+    accessToken = data.accessToken;
+    currentUser = data.user;
+    location.href = 'feed.html';
+  } catch (error) {
+    regErrorText.textContent = error.message || 'No se pudo crear la cuenta. Intenta de nuevo.';
+    regError.classList.add('visible');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+
+document.querySelectorAll('.eye-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = btn.parentElement.querySelector('input');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.classList.toggle('show', show);
+  });
+});
+
+async function registrarConGoogle(idToken) {
+  regError.classList.remove('visible');
+  const btn = document.querySelector('.btn-google');
+  btn.disabled = true;
+  try {
+    const data = await api.post('/auth/google', { idToken });
+    accessToken = data.accessToken;
+    currentUser = data.user;
+    location.href = 'feed.html';
+  } catch (error) {
+    regErrorText.textContent = error.message || 'No se pudo iniciar sesión con Google';
+    regError.classList.add('visible');
+    btn.disabled = false;
+  }
+}
+
+renderBotonGoogle('googleButton', registrarConGoogle).then((ok) => {
+  const slot = document.getElementById('googleButton');
+  const fab = document.querySelector('.btn-google');
+  if (ok) {
+    slot.classList.add('visible');
+    fab.style.display = 'none';
+  } else {
+    fab.addEventListener('click', () => {
+      promptGoogle(registrarConGoogle).then((okp) => {
+        if (!okp) {
+          regErrorText.textContent = 'No se pudo cargar Google. Intenta de nuevo.';
+          regError.classList.add('visible');
+        }
+      });
+    });
+  }
+});
+</script>
+</body>
+</html>

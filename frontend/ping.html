@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Ping — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body class="auth-body">
+
+<div class="ping-card">
+  <div class="brand-mark"><span class="m1">moa</span><span class="m2">mercado</span></div>
+  <div class="ping-pill" id="pingPill">
+    <span class="dot-green" id="pingDot"></span>
+    <p id="pingMsg">Comprobando conexión con la API…</p>
+  </div>
+  <div class="ping-meta">
+    <span class="pub-time">marketplace-moa · healthcheck</span>
+    <a href="feed-guest.html" class="text-link">Volver al mercado</a>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+(async function chequeo() {
+  const pill = document.getElementById('pingPill');
+  const dot = document.getElementById('pingDot');
+  const msg = document.getElementById('pingMsg');
+  const t0 = performance.now();
+  try {
+    const res = await fetch(`${API_URL}/feed`, { headers: { Accept: 'application/json' } });
+    const ms = Math.round(performance.now() - t0);
+    if (res.ok) {
+      pill.className = 'ping-pill';
+      msg.textContent = `La API responde con normalidad · ${ms} ms`;
+    } else {
+      pill.className = 'ping-pill ping-bad';
+      dot.className = 'dot-red';
+      msg.textContent = `La API respondió con estado ${res.status} · ${ms} ms`;
+    }
+  } catch (e) {
+    pill.className = 'ping-pill ping-bad';
+    dot.className = 'dot-red';
+    msg.textContent = 'No se pudo conectar con la API de Render.';
+  }
+})();
+</script>
+</body>
+</html>

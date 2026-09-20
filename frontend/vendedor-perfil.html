@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Mi perfil de vendedor — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page main-narrow">
+
+  <div id="vista"></div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initVendedorPerfil() {
+  const vista = document.getElementById('vista');
+
+  function badgeEstado(estado) {
+    if (estado === 'activo') return '<span class="badge badge-ready">Activa</span>';
+    if (estado === 'pausado') return '<span class="badge badge-paused">Pausada</span>';
+    return '<span class="badge badge-danger">Eliminada</span>';
+  }
+
+  function renderPerfil(perfil, u) {
+    const nombre = perfil.nombreNegocio || [u.nombre, u.apellidos].filter(Boolean).join(' ');
+    const reparto = u.reparto || perfil.reparto;
+    const lic = perfil.estadoLicencia;
+    const sus = perfil.estadoSuscripcion;
+    const licBadge = lic === 'aprobado' ? 'badge-ready' : lic === 'pendiente' ? 'badge-demo' : 'badge-danger';
+    const susBadge = sus === 'activa' ? 'badge-ready' : sus === 'demo' ? 'badge-demo' : 'badge-paused';
+    const demoHoy = sus === 'demo' ? ` · ${perfil.productosHoy ?? 0}/5 hoy` : '';
+    const tipo = perfil.tipo === 'individual' ? 'Cuenta propia' : perfil.tipo === 'tcp' ? 'TCP' : 'Empresa estatal';
+
+    vista.innerHTML = `
+      <div class="card profile-card center">
+        ${avatarHtml({ nombre: u.nombre, apellidos: u.apellidos }, 'avatar-lg')}
+        <h1 class="profile-name">${esc(nombre)}</h1>
+        <div class="profile-meta">
+          <span class="badge ${licBadge}">Licencia ${perfil.estadoLicencia}</span>
+          <span class="badge ${susBadge}">Plan ${perfil.estadoSuscripcion}${demoHoy}</span>
+        </div>
+        ${perfil.categoriaNegocio ? `<p class="profile-bio">${esc(perfil.categoriaNegocio)}</p>` : ''}
+        ${reparto ? `<p class="profile-bio">Reparto: ${esc(reparto)}</p>` : ''}
+        ${perfil.horarioAtencion ? `<p class="profile-bio">Horario: ${esc(perfil.horarioAtencion)}</p>` : ''}
+        <div class="profile-stats">
+          <div class="stat"><div class="stat-num">${perfil.productosTotalDemo ?? '—'}</div><div class="stat-lbl">plan demo</div></div>
+          <div class="stat"><div class="stat-num">${tipo}</div><div class="stat-lbl">tipo</div></div>
+        </div>
+      </div>
+
+      <div class="feed-hdr" style="margin-top:22px">
+        <h2>Mis publicaciones</h2>
+        <a href="publicacion-nueva.html" class="btn-cta" style="height:40px;padding:0 14px;font-size:13.5px">Nueva publicación</a>
+      </div>
+
+      <div class="pub-admin-list" id="pubList"></div>
+    `;
+  }
+
+  async function renderPub(pub) {
+    const nums = (pub.productos || []).map((p) => `${fmtPrecio(p.precio)} CUP`).join(' · ');
+    const url = `publicacion.html?id=${pub.id}`;
+    return `
+      <div class="pub-admin-item">
+        <div class="pub-admin-main">
+          <a href="${url}" class="pub-admin-title">${esc(pub.titulo)}</a>
+          <div class="pub-admin-meta">${badgeEstado(pub.estado)} <span>${(pub.productos || []).length} productos</span></div>
+          ${nums ? `<div class="pub-admin-mini">${esc(nums)}</div>` : ''}
+        </div>
+        <div class="pub-admin-actions">
+          <a href="${url}" class="btn-ghost btn-sm">Ver</a>
+          <button type="button" class="btn-ghost btn-sm text-danger" data-del="${pub.id}">Eliminar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function cargarPublicaciones() {
+    const lista = document.getElementById('pubList');
+    if (!lista) return;
+    try {
+      const { publicaciones } = await api.get('/vendedores/me/publicaciones');
+      if (!publicaciones.length) {
+        lista.innerHTML = '<div class="grid-skeleton">Aún no tienes publicaciones. ¡Crea la primera!</div>';
+        return;
+      }
+      lista.innerHTML = (await Promise.all(publicaciones.map(renderPub))).join('');
+      lista.querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          const id = b.dataset.del;
+          if (!confirm('¿Eliminar esta publicación? Esta acción no se puede deshacer.')) return;
+          try {
+            await api.del(`/publicaciones/${id}`);
+            await cargarPublicaciones();
+          } catch (e) {
+            alert('No se pudo eliminar: ' + (e.message || 'intenta de nuevo'));
+          }
+        });
+      });
+    } catch (e) {
+      lista.innerHTML = '<div class="grid-skeleton">No se pudieron cargar tus publicaciones.</div>';
+    }
+  }
+
+  esperarSesion().then((u) => {
+    if (!u) { location.href = 'login.html'; return; }
+    api.get('/vendedores/me').then(({ perfil }) => {
+      renderPerfil(perfil, u);
+      cargarPublicaciones();
+    }).catch(() => {
+      vista.innerHTML = `
+        <div class="card center" style="padding:30px">
+          <h1 class="profile-name">Aún no eres vendedor</h1>
+          <p style="color:var(--ink-soft);font-size:14px;line-height:1.6;max-width:340px">
+            Solicita una licencia para publicar productos en el marketplace.
+          </p>
+          <a href="solicitud.html" class="btn-cta" style="margin-top:14px">Solicitar licencia</a>
+        </div>`;
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Marketplace Moa — Feed</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<section class="guest-banner">
+  <div class="guest-banner-text">
+    <strong>¿Nuevo en Moa?</strong>
+    <span>Crea tu cuenta para publicar, guardar productos y contactar vendedores.</span>
+  </div>
+  <a href="registro.html" class="btn-cta">Crear cuenta</a>
+</section>
+
+<main class="main-page">
+
+  <section class="welcome">
+    <h1>¿Qué andas buscando hoy?</h1>
+    <p>Compra y vende en Moa, Holguín — directo entre vecinos.</p>
+  </section>
+
+  <section class="search-row">
+    <form class="search-box" id="searchForm" style="flex:1">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8.5" cy="8.5" r="5"/><path d="M12.5 12.5L17 17"/></svg>
+      <input type="search" id="searchInput" placeholder="Buscar producto (ej. arroz, pollo, medicamento)">
+    </form>
+  </section>
+
+  <div class="cat-row" id="catRow">
+    <button class="cat active" data-id="">Todo</button>
+  </div>
+
+  <div class="feed-hdr">
+    <h2>Publicaciones <span id="pubCount" style="color:var(--chalk-dim);font-weight:400"></span></h2>
+    <div class="feed-tools">
+      <select class="sort-select" id="repartoSelect">
+        <option value="">Todos los repartos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="load-more" id="loadMoreWrap">
+    <button type="button" id="loadMore" onclick="openAuth()">Cargar más publicaciones</button>
+  </div>
+
+</main>
+
+<div class="overlay" id="guestModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="sheet-body center">
+      <div class="brand-mark" style="margin-bottom:6px"><span class="m1">moa</span><span class="m2">mercado</span></div>
+      <h2 id="authTitle" style="font-size:21px;margin:0 0 6px">Únete al mercado de Moa</h2>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Crea una cuenta gratis para ver teléfonos, guardar favoritos y chatear con los vendedores.</p>
+      <div class="column" style="width:100%;margin-top:16px">
+        <a href="registro.html" class="btn-cta" style="width:100%">Crear cuenta gratis</a>
+        <a href="login.html" class="btn-ghost" style="width:100%;justify-content:center">Ya tengo una cuenta</a>
+      </div>
+    </div>
+    <button class="close-btn" aria-label="Cerrar" onclick="closeAuth()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initGuestFeed() {
+  const modal = document.getElementById('guestModal');
+  window.openAuth = function () {
+    if (currentUser) { location.href = 'feed.html'; return; }
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.classList.add('open'), 10);
+  };
+  window.closeAuth = function () {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => modal.hidden = true, 200);
+  };
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAuth(); });
+
+  const grid = document.getElementById('grid');
+  const catRow = document.getElementById('catRow');
+  const pubCount = document.getElementById('pubCount');
+  const repartoSelect = document.getElementById('repartoSelect');
+  const loadMoreBtn = document.getElementById('loadMore');
+  const loadMoreWrap = document.getElementById('loadMoreWrap');
+  const searchInput = document.getElementById('searchInput');
+  const searchForm = document.getElementById('searchForm');
+
+  let page = 1;
+  let activoCat = '';
+  let activoReparto = '';
+  let busqueda = '';
+  let paginasCargadas = [];
+
+  REPARTOS.forEach((r) => {
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    repartoSelect.appendChild(opt);
+  });
+
+  async function cargarCategorias() {
+    try {
+      const { categorias } = await api.get('/feed/categorias');
+      catRow.innerHTML = '<button class="cat active" data-id="">Todo</button>';
+      categorias.forEach((c) => {
+        const b = document.createElement('button');
+        b.className = 'cat';
+        b.dataset.id = c.id;
+        b.textContent = c.nombre;
+        b.addEventListener('click', () => { activoCat = String(c.id); render(false); });
+        catRow.appendChild(b);
+      });
+      catRow.querySelector('[data-id=""]').addEventListener('click', () => { activoCat = ''; render(false); });
+    } catch (e) { /* categorías por defecto ya están */ }
+  }
+
+  async function render(append) {
+    let html;
+    try {
+      if (busqueda) {
+        const { productos } = await api.get(`/feed/productos?q=${encodeURIComponent(busqueda)}`);
+        html = productos.map((p) => moaProdCard(p, false, false));
+        pubCount.textContent = `búsqueda: «${busqueda}»`;
+        loadMoreWrap.style.display = 'none';
+      } else {
+        const params = {};
+        if (activoCat) params.categoria = activoCat;
+        if (activoReparto) params.reparto = activoReparto;
+        const qs = new URLSearchParams(params); qs.set('page', String(page));
+        const { feed } = await api.get(`/feed?${qs}`);
+        paginasCargadas = append ? paginasCargadas.concat(feed) : feed;
+        html = feed.map((p) => moaFeedCard(p, false));
+        pubCount.textContent = `(${paginasCargadas.length})`;
+        loadMoreWrap.style.display = feed.length === 0 ? 'none' : 'block';
+        for (const c of catRow.querySelectorAll('.cat')) c.classList.toggle('active', c.dataset.id === String(activoCat));
+      }
+      grid.innerHTML = html.length ? html.join('') : '<div class="grid-skeleton">No hay publicaciones todavía.</div>';
+      bindGrid(grid); // hearts guest → openAuth via bindFav/window.openAuth
+      bindKebab(grid);
+    } catch (e) {
+      grid.innerHTML = '<div class="grid-skeleton">No se pudo cargar el feed. Intenta de nuevo.</div>';
+      loadMoreWrap.style.display = 'none';
+    }
+  }
+
+  loadMoreBtn.addEventListener('click', (e) => { e.preventDefault(); openAuth(); });
+  searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    paginasCargadas = []; page = 1; busqueda = searchInput.value.trim(); render(false);
+  });
+  repartoSelect.addEventListener('change', () => { activoReparto = repartoSelect.value; page = 1; paginasCargadas = []; render(false); });
+
+  esperarSesion().then(() => { if (currentUser) { location.href = 'feed.html'; return; } cargarCategorias(); render(false); });
+})();
+</script>
+</body>
+</html>

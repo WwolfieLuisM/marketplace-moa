@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Recuperar contraseña — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body class="auth-body">
+
+<div class="window-card">
+  <div class="window-bar">
+    <div class="window-dots"><span class="wd"></span><span class="wd"></span><span class="wd"></span></div>
+    <a href="login.html">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </a>
+  </div>
+
+  <div class="form-body">
+    <div class="brand-mark"><span class="m1">moa</span><span class="m2">mercado</span></div>
+    <h1 class="form-title">Recuperar contraseña</h1>
+    <p class="form-sub">Escribe tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+
+    <form id="recForm" novalidate>
+      <label class="field">
+        <span class="field-label">Correo electrónico</span>
+        <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+      </label>
+
+      <button type="submit" class="btn-cta btn-block">
+        <span class="btn-label">Enviar enlace</span>
+        <span class="btn-spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+      </button>
+    </form>
+
+    <p class="form-footer"><a href="login.html">Volver a iniciar sesión</a></p>
+  </div>
+</div>
+
+<div class="overlay" id="okModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="okTitle">
+    <div class="sheet-body center">
+      <div class="ok-icon">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg>
+      </div>
+      <h2 id="okTitle" style="font-size:20px;margin:0 0 6px">Revisa tu correo</h2>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.</p>
+      <a href="login.html" class="btn-cta" style="width:100%;justify-content:center">Entendido</a>
+    </div>
+    <button class="close-btn" aria-label="Cerrar" onclick="location.href='login.html'">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('recForm');
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    const modal = document.getElementById('okModal');
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.classList.add('open'), 10);
+  }, 900);
+});
+</script>
+</body>
+</html>

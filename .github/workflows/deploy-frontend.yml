@@ -21,18 +21,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 12.4.1
-
-      - name: Instalar dependencias
+      - name: Desplegar sitio estatico (Workers Static Assets)
         working-directory: frontend
-        run: pnpm install --frozen-lockfile
-
-      - name: Build con OpenNext
-        working-directory: frontend
-        run: pnpm run deploy
-        env:
-          NEXT_PUBLIC_API_URL: https://moa-api-8y3i.onrender.com
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: 687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.googleusercontent.com
+        run: npx wrangler@latest deploy

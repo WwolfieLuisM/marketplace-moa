@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Perfil de vendedor — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page main-narrow">
+
+  <a href="feed.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3l-5 5 5 5"/></svg>
+    Volver
+  </a>
+
+  <div id="vista"></div>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initVendedor() {
+  const vista = document.getElementById('vista');
+  const userId = new URLSearchParams(location.search).get('user');
+  if (!userId) { vista.innerHTML = '<div class="grid-skeleton">Vendedor no encontrado.</div>'; return; }
+
+  async function render() {
+    try {
+      const { perfil, publicaciones } = await api.get(`/vendedores/publico/${userId}`);
+      const totalProductos = publicaciones.reduce((acc, p) => acc + (p.productos || []).length, 0);
+      const sesion = !!currentUser;
+
+      let html = `
+      <div class="card profile-card center">
+        ${avatarHtml({ nombre: perfil.nombre, apellidos: perfil.apellidos }, 'avatar-lg')}
+        <h1 class="profile-name">${esc(perfil.nombreNegocio || [perfil.nombre, perfil.apellidos].filter(Boolean).join(' '))}</h1>
+        <div class="profile-meta">
+          <span class="badge badge-active"><svg width="5" height="5" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg> Vendedor</span>
+          <span class="badge badge-zone">${SVGS.zone} ${esc(perfil.reparto || '—')}</span>
+        </div>
+        ${perfil.categoriaNegocio ? `<p class="profile-bio">${esc(perfil.categoriaNegocio)}</p>` : ''}
+        ${perfil.horarioAtencion ? `<p class="profile-bio">Horario: ${esc(perfil.horarioAtencion)}</p>` : ''}
+        ${perfil.direccionFisica ? `<p class="profile-bio">${esc(perfil.direccionFisica)}</p>` : ''}
+        <div class="profile-stats">
+          <div class="stat"><div class="stat-num">${publicaciones.length}</div><div class="stat-lbl">publicaciones</div></div>
+          <div class="stat"><div class="stat-num">${totalProductos}</div><div class="stat-lbl">productos</div></div>
+        </div>
+      </div>
+
+      <div class="feed-hdr" style="margin-top:22px"><h2>Publicaciones del vendedor <span>(${publicaciones.length})</span></h2></div>
+      <div class="grid">`;
+
+      if (publicaciones.length === 0) {
+        html += '<div class="grid-skeleton">Este vendedor aún no tiene publicaciones activas.</div>';
+      } else {
+        html += publicaciones.map((p) => moaCardMini(p, sesion)).join('');
+      }
+      html += '</div>';
+
+      vista.innerHTML = html;
+      bindGrid(vista);
+      if (sesion) marcarFavoritos(vista);
+    } catch (e) {
+      vista.innerHTML = '<div class="grid-skeleton">Vendedor no encontrado.</div>';
+    }
+  }
+
+  esperarSesion().then(render);
+})();
+</script>
+</body>
+</html>

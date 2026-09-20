@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Conversación — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+  <a href="mensajes.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3l-5 5 5 5"/></svg>
+    Mensajes
+  </a>
+
+  <div class="chat-layout" id="chat">
+    <div class="chat-head" id="chatHead"></div>
+    <div class="chat-shell" id="chatShell">
+      <div class="grid-skeleton">Cargando conversación…</div>
+    </div>
+    <form class="composer" id="composer">
+      <input type="text" id="chatInput" placeholder="Escribe un mensaje…" autocomplete="off" maxlength="5000">
+      <button type="submit" class="btn-cta" style="height:44px;min-width:44px;padding:0 16px" aria-label="Enviar">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L17 3l-4 14-3-5-5 1z"/></svg>
+      </button>
+    </form>
+  </div>
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initConversacion() {
+  const otroId = new URLSearchParams(location.search).get('user');
+  const head = document.getElementById('chatHead');
+  const shell = document.getElementById('chatShell');
+  const composer = document.getElementById('composer');
+  const input = document.getElementById('chatInput');
+
+  function addRef(prod) {
+    if (!prod) return '';
+    return `<div class="chat-ref"><div class="chat-ref-thumb">${SVGS.place}</div><span class="chat-ref-name">${esc(prod.nombre)}</span></div>`;
+  }
+
+  function bubble(m) {
+    const mine = m.remitenteId === currentUser.id;
+    const ref = addRef(m.producto);
+    return `
+    <div class="bubble ${mine ? 'bubble-mine' : 'bubble-other'}" data-id="${m.id}">
+      ${ref}
+      <div class="bubble-text">${esc(m.contenido)}</div>
+      <div class="bubble-time">${m.creadoEn ? relTime(m.creadoEn) : ''}</div>
+    </div>`;
+  }
+
+  function renderOtro(u) {
+    head.innerHTML = `
+      <a href="${u.id ? 'vendedor.html?user=' + u.id : 'mensajes.html'}" class="chat-user">
+        ${avatarHtml(u)}
+        <span>${esc([u.nombre, u.apellidos].filter(Boolean).join(' ')) || 'Usuario'}</span>
+      </a>`;
+  }
+
+  async function cargar() {
+    if (!otroId) { shell.innerHTML = '<div class="grid-skeleton">Conversación no válida.</div>'; composer.style.display = 'none'; return; }
+    const { otroUsuario, mensajes } = await api.get(`/mensajes/conversaciones/${otroId}`);
+    renderOtro(otroUsuario);
+    shell.innerHTML = mensajes.length ? mensajes.map(bubble).join('') : '<div class="chat-empty">Todavía no hay mensajes. Escribe el primero.</div>';
+    shell.scrollTop = shell.scrollHeight;
+  }
+
+  composer.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const contenido = input.value.trim();
+    if (!contenido) return;
+    input.value = '';
+    const { mensaje } = await api.post('/mensajes', { destinatarioId: otroId, contenido });
+    shell.insertAdjacentHTML('beforeend', bubble(mensaje));
+    shell.scrollTop = shell.scrollHeight;
+  });
+
+  esperarSesion().then((u) => {
+    if (!u) { location.href = 'login.html'; return; }
+    cargar().catch(() => {
+      shell.innerHTML = '<div class="grid-skeleton">No se pudo cargar la conversación.</div>';
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Gestión de vendedores — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+  <a href="admin.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3l-5 5 5 5"/></svg>
+    Panel de administración
+  </a>
+
+  <div class="feed-hdr"><h2>Vendedores</h2></div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-estado="">Todos</button>
+    <button class="tab" data-estado="pendiente">Pendientes</button>
+    <button class="tab" data-estado="aprobado">Aprobados</button>
+    <button class="tab" data-estado="rechazado">Rechazados</button>
+  </div>
+
+  <div id="lista" class="pub-admin-list"></div>
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initAdminVendedores() {
+  const lista = document.getElementById('lista');
+  const tabs = document.getElementById('tabs');
+  let estado = '';
+
+  function badge(lic) {
+    if (lic === 'pendiente') return '<span class="badge badge-demo">pendiente</span>';
+    if (lic === 'aprobado') return '<span class="badge badge-ready">aprobado</span>';
+    return '<span class="badge badge-danger">rechazado</span>';
+  }
+  const tipoLbl = (t) => t === 'individual' ? 'Cuenta propia' : t === 'tcp' ? 'TCP' : 'Empresa estatal';
+
+  async function render() {
+    lista.innerHTML = '<div class="grid-skeleton">Cargando…</div>';
+    try {
+      const qs = estado ? `?estadoLicencia=${estado}` : '';
+      const { perfiles } = await api.get(`/vendedores${qs}`);
+      if (!perfiles.length) {
+        lista.innerHTML = '<div class="grid-skeleton">No hay vendedores en esta sección.</div>';
+        return;
+      }
+      lista.innerHTML = perfiles.map((p) => {
+        const u = p.user || {};
+        const nombre = [u.nombre, u.apellidos].filter(Boolean).join(' ') || u.email;
+        const accion = p.estadoLicencia === 'pendiente' ? `
+          <button type="button" class="btn-cta btn-sm" data-aprobar="${p.id}">Aprobar</button>
+          <button type="button" class="btn-ghost btn-sm text-danger" data-rechazar="${p.id}">Rechazar</button>` : '';
+        return `
+        <div class="pub-admin-item">
+          <div class="pub-admin-main">
+            <span class="pub-admin-title">${esc(nombre)}</span>
+            <div class="pub-admin-meta">
+              ${badge(p.estadoLicencia)}
+              <span>${esc(u.email)}</span>
+            </div>
+            <div class="pub-admin-mini">
+              ${tipoLbl(p.tipo)}${p.nombreNegocio ? ' · ' + esc(p.nombreNegocio) : ''}${p.categoriaNegocio ? ' · ' + esc(p.categoriaNegocio) : ''}${u.reparto ? ' · ' + esc(u.reparto) : ''}
+            </div>
+          </div>
+          <div class="pub-admin-actions">${accion}</div>
+        </div>`;
+      }).join('');
+
+      lista.querySelectorAll('[data-aprobar]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          try {
+            await api.post(`/vendedores/${b.dataset.aprobar}/aprobar`, { moda: 'demo' });
+            render();
+          } catch (e) { alert('No se pudo aprobar: ' + (e.message || 'intenta de nuevo')); }
+        });
+      });
+      lista.querySelectorAll('[data-rechazar]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Rechazar la solicitud de este vendedor?')) return;
+          try {
+            await api.post(`/vendedores/${b.dataset.rechazar}/rechazar`, {});
+            render();
+          } catch (e) { alert('No se pudo rechazar: ' + (e.message || 'intenta de nuevo')); }
+        });
+      });
+    } catch (e) {
+      lista.innerHTML = '<div class="grid-skeleton">No tienes permisos de administrador.</div>';
+    }
+  }
+
+  tabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    estado = btn.dataset.estado;
+    tabs.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === btn));
+    render();
+  });
+
+  esperarSesion().then((u) => {
+    if (!u) { location.href = 'login.html'; return; }
+    if (u.rol !== 'admin') { lista.innerHTML = '<div class="grid-skeleton">No tienes permisos de administrador.</div>'; return; }
+    render();
+  });
+})();
+</script>
+</body>
+</html>

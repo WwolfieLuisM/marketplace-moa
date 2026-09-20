@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Mi perfil — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page main-narrow">
+
+  <div class="card profile-card center" id="perfilCard">
+    <div class="avatar avatar-lg" id="perfilAvatar">--</div>
+    <h1 class="profile-name" id="perfilNombre">…</h1>
+    <div class="profile-meta" id="perfilMeta"></div>
+  </div>
+
+  <div class="feed-hdr" style="margin-top:22px"><h2>Estado como vendedor</h2></div>
+  <div class="card seller-status" id="vendedorStatus">
+    <div class="status-line">
+      <span class="badge badge-demo" id="statusBadge">—</span>
+      <span class="text-link" id="noVendedorLink" hidden>Ya no quiero ser vendedor</span>
+    </div>
+    <p class="status-note" id="statusNote">Cargando…</p>
+    <a href="solicitud.html" class="btn-cta" id="solicitarBtn" style="width:100%;justify-content:center">Quiero ser vendedor</a>
+    <a href="vendedor-perfil.html" class="btn-ghost" id="verVendedorBtn" style="width:100%;justify-content:center;display:none">Ver mi perfil de vendedor</a>
+    <div class="license-meta" id="licenseMeta" style="margin-top:16px;display:none"></div>
+  </div>
+
+  <div class="feed-hdr" style="margin-top:22px"><h2>Datos personales</h2></div>
+
+  <form id="perfilForm" class="form-paper">
+
+    <div class="row2">
+      <label class="field">
+        <span class="field-label">Nombre</span>
+        <input type="text" name="nombre" id="fNombre">
+      </label>
+      <label class="field">
+        <span class="field-label">Apellidos</span>
+        <input type="text" name="apellidos" id="fApellidos">
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Teléfono</span>
+      <input type="tel" name="telefono" id="fTelefono" inputmode="numeric">
+    </label>
+
+    <label class="field">
+      <span class="field-label">Correo electrónico</span>
+      <input type="email" id="fEmail" disabled title="El correo no se puede cambiar">
+    </label>
+
+    <label class="field">
+      <span class="field-label">Reparto donde vives</span>
+      <select name="reparto" class="select-board" id="fReparto"></select>
+    </label>
+
+    <button type="submit" class="btn-cta btn-block">
+      <span class="btn-label">Guardar cambios</span>
+      <span class="btn-spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+    </button>
+
+    <div class="form-msg" id="formMsg" hidden></div>
+
+    <button type="button" class="btn-ghost btn-block text-danger" style="justify-content:center" onclick="cerrarSesion()">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 4V3a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1"/><path d="M1 10h11M8 6l-4 4 4 4"/></svg>
+      Cerrar sesión
+    </button>
+  </form>
+
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initPerfil() {
+  const rep = document.getElementById('fReparto');
+  REPARTOS.forEach((r) => {
+    const o = document.createElement('option');
+    o.value = r; o.textContent = r;
+    rep.appendChild(o);
+  });
+
+  const msg = document.getElementById('formMsg');
+  function mostrarMsg(texto, ok) {
+    msg.hidden = false;
+    msg.textContent = texto;
+    msg.style.color = ok ? 'var(--success)' : 'var(--danger,#D9805F)';
+    setTimeout(() => { msg.hidden = true; }, 4000);
+  }
+
+  function llenarUsuario(u) {
+    document.getElementById('fNombre').value = u.nombre || '';
+    document.getElementById('fApellidos').value = u.apellidos || '';
+    document.getElementById('fTelefono').value = u.telefono || '';
+    document.getElementById('fEmail').value = u.email || '';
+    if (u.reparto && [...rep.options].some((o) => o.value === u.reparto)) rep.value = u.reparto;
+
+    document.getElementById('perfilNombre').textContent = `${u.nombre} ${u.apellidos}`.trim() || u.email;
+    const av = document.getElementById('perfilAvatar');
+    const [bg, fg] = avatarColor(`${u.nombre} ${u.apellidos}`);
+    av.style.background = bg; av.style.color = fg;
+    av.textContent = inicialesDe(u);
+
+    const meta = document.getElementById('perfilMeta');
+    let html = '<span class="badge badge-zone">' + SVGS.zone + ' ' + (u.reparto || 'Reparto sin definir') + '</span>';
+    html += '<span class="badge badge-zone">' + u.rol + '</span>';
+    if (u.authProvider === 'google') html += '<span class="badge badge-ready">Google</span>';
+    meta.innerHTML = html;
+  }
+
+  async function cargarEstadoVendedor() {
+    const statusBadge = document.getElementById('statusBadge');
+    const statusNote = document.getElementById('statusNote');
+    const solicitarBtn = document.getElementById('solicitarBtn');
+    const verBtn = document.getElementById('verVendedorBtn');
+    const noVendedor = document.getElementById('noVendedorLink');
+    const licenseMeta = document.getElementById('licenseMeta');
+    try {
+      const { perfil } = await api.get('/vendedores/me');
+      solicitarBtn.style.display = 'none';
+      verBtn.style.display = 'flex';
+      noVendedor.hidden = false;
+
+      let tipo = perfil.tipo === 'individual' ? 'Individual' : perfil.tipo === 'tcp' ? 'TCP' : 'Empresa estatal';
+      const lic = perfil.estadoLicencia;
+      const sus = perfil.estadoSuscripcion;
+      if (lic === 'aprobado') statusBadge.className = 'badge badge-ready';
+      else if (lic === 'pendiente') statusBadge.className = 'badge badge-demo';
+      else statusBadge.className = 'badge badge-paused';
+      statusBadge.textContent = lic === 'aprobado' ? 'Licencia aprobada' : lic === 'pendiente' ? 'Licencia pendiente' : 'Licencia rechazada';
+
+      const nombreNegocio = perfil.nombreNegocio ? ` · ${perfil.nombreNegocio}` : '';
+      statusNote.textContent = `Tipo: ${tipo}${nombreNegocio} · Suscripción: ${sus}.`;
+
+      const demoHoy = perfil.estadoSuscripcion === 'demo' ? `${perfil.productosHoy || 0}/5 hoy · ${perfil.productosTotalDemo || 0}/10 total` : '';
+      licenseMeta.innerHTML = `
+        <div class="lm-item"><span class="lm-lbl">Suscripción</span><span class="lm-val">${sus}</span></div>
+        <div class="lm-item"><span class="lm-lbl">Tipo</span><span class="lm-val">${tipo}</span></div>
+        ${demoHoy ? `<div class="lm-item"><span class="lm-lbl">Plan demo</span><span class="lm-val">${demoHoy}</span></div>` : ''}
+        ${perfil.suscripcionVenceEn ? `<div class="lm-item"><span class="lm-lbl">Vence</span><span class="lm-val">${new Date(perfil.suscripcionVenceEn).toLocaleDateString('es-CU')}</span></div>` : ''}
+      `;
+      licenseMeta.style.display = 'grid';
+    } catch (e) {
+      statusBadge.textContent = 'No vendedor';
+      statusBadge.className = 'badge badge-demo';
+      statusNote.textContent = 'Aún no eres vendedor. Solicita una licencia para publicar productos y llegar a más clientes.';
+      solicitarBtn.style.display = 'flex';
+      verBtn.style.display = 'none';
+    }
+  }
+
+  document.getElementById('perfilForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    try {
+      const { user } = await api.patch('/auth/me', {
+        nombre: document.getElementById('fNombre').value.trim(),
+        apellidos: document.getElementById('fApellidos').value.trim(),
+        telefono: document.getElementById('fTelefono').value.trim(),
+        reparto: document.getElementById('fReparto').value || null,
+      });
+      currentUser = user;
+      llenarUsuario(user);
+      mostrarMsg('Perfil actualizado', true);
+      window.dispatchEvent(new CustomEvent('sesion-actualizada'));
+    } catch (err) {
+      mostrarMsg(err.message || 'No se pudo guardar', false);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  });
+
+  esperarSesion().then((u) => {
+    if (!u) { location.href = 'login.html'; return; }
+    llenarUsuario(u);
+    cargarEstadoVendedor();
+  });
+})();
+</script>
+</body>
+</html>
