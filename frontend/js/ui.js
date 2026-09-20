@@ -59,9 +59,9 @@ function crearPanelBienvenida() {
     '<h2 id="authTitle" style="font-size:21px;margin:0 0 6px">Únete al mercado de Moa</h2>' +
     '<p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Para ver teléfonos, guardar favoritos, publicar y chatear necesitas una cuenta. Entra con Google o regístrate gratis.</p>' +
     '<div class="column" style="width:100%;margin-top:16px">' +
-    '<button type="button" class="btn-ghost panel-google" style="width:100%;justify-content:center">Continuar con Google</button>' +
+    '<button type="button" class="btn-ghost on-paper panel-google" style="width:100%;justify-content:center">Continuar con Google</button>' +
     '<a href="registro.html" class="btn-cta" style="width:100%">Registrarme gratis</a>' +
-    '<a href="login.html" class="btn-ghost" style="width:100%;justify-content:center">Ya tengo una cuenta</a>' +
+    '<a href="login.html" class="btn-ghost on-paper" style="width:100%;justify-content:center">Ya tengo una cuenta</a>' +
     '</div></div>' +
     '<button type="button" class="close-btn" aria-label="Cerrar" onclick="window.closeAuth&&closeAuth()">' +
     '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>' +
