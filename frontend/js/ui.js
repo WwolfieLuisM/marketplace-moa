@@ -4,47 +4,71 @@ const GOOGLE_CLIENT_ID = '687233405771-a2k8kvlp3nb0ufme42dqjpduiicmokbq.apps.goo
 
 let guestModalEl = null;
 let googlePanelLock = false;
+let gsiCargado = null;
+let panelGoogleMontado = false;
 
 function cargarGsiPanel() {
+  if (gsiCargado) return Promise.resolve(gsiCargado);
   return new Promise((resolve) => {
-    if (window.google && window.google.accounts) return resolve(true);
+    if (window.google && window.google.accounts) { gsiCargado = true; return resolve(true); }
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
+    s.onload = () => { gsiCargado = true; resolve(true); };
+    s.onerror = () => { gsiCargado = false; resolve(false); };
     document.head.appendChild(s);
   });
 }
 
-async function entrarConGoogle() {
+// Renderiza el botón estándar de Google dentro del panel (patrón probado en login.html).
+function montarGooglePanel() {
+  if (panelGoogleMontado) return;
+  cargarGsiPanel().then((listo) => {
+    const g = listo && window.google && window.google.accounts && window.google.accounts.id;
+    const slot = guestModalEl && guestModalEl.querySelector('#googlePanelSlot');
+    const custom = guestModalEl && guestModalEl.querySelector('.panel-google');
+    if (!g || !slot || !custom) return;
+    try {
+      g.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (resp) => {
+          if (!resp || !resp.credential) return;
+          try {
+            const data = await api.post('/auth/google', { idToken: resp.credential });
+            if (data && data.user) location.href = 'feed.html';
+          } catch (err) {
+            window.alert(err.message || 'No se pudo iniciar sesión con Google');
+          }
+        },
+      });
+      const ancho = Math.max(280, Math.min(340, window.innerWidth - 48));
+      g.renderButton(slot, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        shape: 'rectangular',
+        text: 'continue_with',
+        locale: (navigator.language || 'es').slice(0, 2),
+        width: ancho,
+      });
+      slot.classList.add('visible');
+      custom.style.display = 'none';
+    } catch (e) {
+      // sin botón estándar: se mantiene el botón personalizado que lleva a login.html
+    } finally {
+      panelGoogleMontado = true;
+    }
+  });
+}
+
+function entrarConGoogle() {
   if (googlePanelLock) return;
   googlePanelLock = true;
-  const btn = guestModalEl && guestModalEl.querySelector('.panel-google');
-  if (btn) btn.disabled = true;
   try {
-    const listo = await cargarGsiPanel();
-    const g = listo && window.google && window.google.accounts && window.google.accounts.id;
-    if (!g) { googlePanelLock = false; if (btn) btn.disabled = false; location.href = 'login.html'; return; }
-    g.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async (resp) => {
-        googlePanelLock = false;
-        if (btn) btn.disabled = false;
-        if (!resp || !resp.credential) return;
-        try {
-          const data = await api.post('/auth/google', { idToken: resp.credential });
-          if (data && data.user) location.href = 'feed.html';
-        } catch (err) {
-          window.alert(err.message || 'No se pudo iniciar sesión con Google');
-        }
-      },
-    });
-    g.prompt(() => { googlePanelLock = false; if (btn) btn.disabled = false; });
-  } catch (e) {
-    googlePanelLock = false;
-    if (btn) btn.disabled = false;
+    // g.prompt() se suprime silenciosamente; login.html renderiza el botón fiable de Google
     location.href = 'login.html';
+  } finally {
+    googlePanelLock = false;
   }
 }
 
@@ -58,6 +82,7 @@ function crearPanelBienvenida() {
     '<div class="brand-mark" style="margin-bottom:6px"><span class="m1">moa</span><span class="m2">mercado</span></div>' +
     '<h2 id="authTitle" style="font-size:21px;margin:0 0 6px">Únete al mercado de Moa</h2>' +
     '<p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Para ver teléfonos, guardar favoritos, publicar y chatear necesitas una cuenta. Entra con Google o regístrate gratis.</p>' +
+    '<div id="googlePanelSlot" class="gis-slot" style="margin-top:16px"></div>' +
     '<div class="column" style="width:100%;margin-top:16px">' +
     '<button type="button" class="btn-ghost on-paper panel-google" style="width:100%;justify-content:center">Continuar con Google</button>' +
     '<a href="registro.html" class="btn-cta" style="width:100%">Registrarme gratis</a>' +
@@ -78,6 +103,7 @@ window.openAuth = function openAuth() {
   guestModalEl.hidden = false;
   document.body.style.overflow = 'hidden';
   setTimeout(() => guestModalEl.classList.add('open'), 10);
+  setTimeout(montarGooglePanel, 120);
 };
 
 window.closeAuth = function closeAuth() {
