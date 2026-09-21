@@ -22,7 +22,6 @@ export async function subirFoto(dataUri) {
   const resultado = await cloudinary.uploader.upload(dataUri, {
     folder: CARPETA,
     resource_type: "image",
-    transformation: { fetch_format: "auto", quality: "auto" },
   });
   return resultado.public_id;
 }
