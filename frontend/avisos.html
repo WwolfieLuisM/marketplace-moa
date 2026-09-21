@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Avisos — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<main class="main-page">
+  <div class="feed-hdr">
+    <h2>Avisos <span id="avisoCount" style="color:var(--chalk-dim);font-weight:400"></span></h2>
+    <button type="button" id="marcarTodas" class="action-btn" style="display:none">Marcar todas leídas</button>
+  </div>
+  <div id="lista"></div>
+  <div class="load-more" id="loadMoreWrap">
+    <button type="button" id="loadMore">Cargar más avisos</button>
+  </div>
+</main>
+
+<div id="nav-mount"></div>
+
+<script src="js/partials.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="partials/header.js"></script>
+<script src="partials/nav.js"></script>
+<script>
+  cargarPartial('#header-mount', 'partials/header.html');
+  cargarPartial('#nav-mount', 'partials/nav.html');
+</script>
+<script>
+(function initAvisos() {
+  const lista = document.getElementById('lista');
+  const avisoCount = document.getElementById('avisoCount');
+  const marcarTodas = document.getElementById('marcarTodas');
+  const loadMoreBtn = document.getElementById('loadMore');
+  const loadMoreWrap = document.getElementById('loadMoreWrap');
+
+  let page = 1;
+  let paginas = [];
+  let total = 0;
+
+  function notifHtml(n) {
+    return `
+    <article class="card${n.leido ? '' : ' aviso-nuevo'}" data-id="${n.id}">
+      <div class="pub-meta" style="flex:1;min-width:0">
+        <span class="pub-name">${esc(n.titulo)}</span>
+        <p style="margin:4px 0 6px;font-size:13.5px;color:var(--ink-soft);line-height:1.45">${esc(n.cuerpo)}</p>
+        <span class="pub-time">${relTime(n.creadoEn)}</span>
+      </div>
+    </article>`;
+  }
+
+  async function render(append) {
+    if (!append) lista.innerHTML = '<div class="grid-skeleton">Cargando avisos…</div>';
+    try {
+      const qs = new URLSearchParams(); qs.set('page', String(page));
+      const { notificaciones, total: t, noLeidas } = await api.get(`/notificaciones?${qs}`);
+      total = t;
+      marcarTodas.style.display = noLeidas === 0 ? 'none' : 'inline-flex';
+      paginas = append ? paginas.concat(notificaciones) : notificaciones;
+      avisoCount.textContent = `(${total})`;
+      loadMoreWrap.style.display = notificaciones.length === 0 || notificaciones.length < 20 ? 'none' : 'block';
+      if (paginas.length === 0) {
+        lista.innerHTML = `
+          <div class="card center" style="padding:34px">
+            <p style="color:var(--ink-soft);font-size:14px">No tienes avisos todavía.<br>Te avisaremos aquí cuando recibas mensajes o movimientos de tu cuenta.</p>
+          </div>`;
+      } else {
+        lista.innerHTML = paginas.map(notifHtml).join('');
+      }
+      bindAvisos();
+    } catch (e) {
+      lista.innerHTML = '<div class="grid-skeleton">No se pudieron cargar tus avisos.</div>';
+    }
+  }
+
+  function bindAvisos() {
+    lista.onclick = async (e) => {
+      const card = e.target.closest('.card[data-id]');
+      if (!card) return;
+      if (card.classList.contains('aviso-nuevo')) {
+        try {
+          await api.patch(`/notificaciones/${card.dataset.id}/leida`);
+          card.classList.remove('aviso-nuevo');
+        } catch (err) { /* sin red */ }
+      }
+    };
+  }
+
+  loadMoreBtn.addEventListener('click', async () => {
+    if (loadMoreBtn.disabled) return;
+    loadMoreBtn.disabled = true;
+    const txt = loadMoreBtn.textContent;
+    loadMoreBtn.textContent = 'Cargando…';
+    try {
+      page += 1; await render(true);
+    } finally {
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = txt;
+    }
+  });
+
+  marcarTodas.addEventListener('click', async () => {
+    try {
+      await api.patch('/notificaciones/marcar-todas-leidas');
+      document.querySelectorAll('.aviso-nuevo').forEach((c) => c.classList.remove('aviso-nuevo'));
+      marcarTodas.style.display = 'none';
+    } catch (err) {
+      alert(err.message || 'No se pudo actualizar');
+    }
+  });
+
+  esperarSesion().then((u) => {
+    if (!u) { if (window.openAuth) { openAuth(); } else { location.href = 'login.html'; } return; }
+    render(false);
+  });
+})();
+</script>
+</body>
+</html>

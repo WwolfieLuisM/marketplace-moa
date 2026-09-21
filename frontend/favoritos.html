@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1F3B32">
-<title>Mis favoritos — Marketplace Moa</title>
+<title>Guardados — Marketplace Moa</title>
 <link rel="icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 
 <main class="main-page">
   <div class="feed-hdr">
-    <h2>Mis productos favoritos <span id="favCount" style="color:var(--chalk-dim);font-weight:400"></span></h2>
+    <h2>Mis guardados <span id="favCount" style="color:var(--chalk-dim);font-weight:400"></span></h2>
     <a href="feed.html" class="back-link" style="padding:0">Ver feed</a>
   </div>
   <div class="grid" id="grid"></div>
@@ -39,14 +39,14 @@
   const favCount = document.getElementById('favCount');
 
   async function render() {
-    grid.innerHTML = '<div class="grid-skeleton">Cargando favoritos…</div>';
+    grid.innerHTML = '<div class="grid-skeleton">Cargando guardados…</div>';
     try {
       const favoritos = await api.get('/favoritos');
       favCount.textContent = `(${favoritos.length})`;
       if (!favoritos.length) {
         grid.innerHTML = `
           <div class="grid-skeleton">
-            Aún no tienes favoritos.<br>
+            Aún no tienes guardados.<br>
             <a href="feed.html" style="color:var(--chalk);text-decoration:underline">Explora el feed</a> y guarda los productos que te gusten.
           </div>`;
         return;
@@ -55,7 +55,7 @@
       bindGrid(grid);
       bindFav(grid);
     } catch (e) {
-      grid.innerHTML = '<div class="grid-skeleton">No se pudieron cargar tus favoritos.</div>';
+      grid.innerHTML = '<div class="grid-skeleton">No se pudieron cargar tus guardados.</div>';
     }
   }
 

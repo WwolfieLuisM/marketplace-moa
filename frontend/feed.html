@@ -121,13 +121,14 @@
 
   async function cargarBusqueda() {
     const { productos } = await api.get(`/feed/productos?q=${encodeURIComponent(busqueda)}`);
-    return productos.map((p) => moaProdCard(p, !!currentUser, false));
+    return productos.filter((p) => !estaOculta((p.publicacion || {}).id)).map((p) => moaProdCard(p, !!currentUser, false));
   }
 
   async function render(append) {
     const sesion = !!currentUser;
     let html;
     let totalMostrados = 0;
+    if (!append) grid.innerHTML = '<div class="grid-skeleton">Cargando publicaciones…</div>';
     try {
       if (busqueda) {
         html = await cargarBusqueda();
@@ -138,11 +139,12 @@
         if (activoCat) params.categoria = activoCat;
         if (activoReparto) params.reparto = activoReparto;
         const feed = await cargarPagina(append, params);
-        totalMostrados = paginasCargadas.length;
-        html = feed.map((p) => moaFeedCard(p, sesion));
+        const visibles = paginasCargadas.filter((p) => !estaOculta(p.id));
+        totalMostrados = visibles.length;
+        html = visibles.map((p) => moaFeedCard(p, sesion));
         pubCount.textContent = `(${totalMostrados})`;
         if (feed.length === 0 && paginasCargadas.length === 0) html = [];
-        loadMoreWrap.style.display = feed.length === 0 ? 'none' : 'block';
+        loadMoreWrap.style.display = feed.length === 0 || feed.length < 20 ? 'none' : 'block';
         estadoVista();
       }
       if (html.length === 0) {
@@ -164,8 +166,17 @@
     clearSearch.hidden = false;
   }
 
-  loadMoreBtn.addEventListener('click', () => {
-    if (!busqueda) { page += 1; render(true); } else { cargarBusqueda(); }
+  loadMoreBtn.addEventListener('click', async () => {
+    if (loadMoreBtn.disabled) return;
+    loadMoreBtn.disabled = true;
+    const txt = loadMoreBtn.textContent;
+    loadMoreBtn.textContent = 'Cargando…';
+    try {
+      if (!busqueda) { page += 1; await render(true); } else { await cargarBusqueda(); }
+    } finally {
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = txt;
+    }
   });
 
   searchForm.addEventListener('submit', (e) => {

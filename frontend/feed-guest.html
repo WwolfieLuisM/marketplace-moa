@@ -112,7 +112,7 @@
     try {
       if (busqueda) {
         const { productos } = await api.get(`/feed/productos?q=${encodeURIComponent(busqueda)}`);
-        html = productos.map((p) => moaProdCard(p, false, false));
+        html = productos.filter((p) => !estaOculta((p.publicacion || {}).id)).map((p) => moaProdCard(p, false, false));
         pubCount.textContent = `búsqueda: «${busqueda}»`;
         loadMoreWrap.style.display = 'none';
       } else {
@@ -122,8 +122,9 @@
         const qs = new URLSearchParams(params); qs.set('page', String(page));
         const { feed } = await api.get(`/feed?${qs}`);
         paginasCargadas = append ? paginasCargadas.concat(feed) : feed;
-        html = feed.map((p) => moaFeedCard(p, false));
-        pubCount.textContent = `(${paginasCargadas.length})`;
+        const visibles = paginasCargadas.filter((p) => !estaOculta(p.id));
+        html = visibles.map((p) => moaFeedCard(p, false));
+        pubCount.textContent = `(${visibles.length})`;
         loadMoreWrap.style.display = feed.length === 0 ? 'none' : 'block';
         for (const c of catRow.querySelectorAll('.cat')) c.classList.toggle('active', c.dataset.id === String(activoCat));
       }

@@ -7,13 +7,14 @@
     'feed-guest.html': 'inicio',
     'favoritos.html': 'guardados',
     'publicacion-nueva.html': 'publicar',
-    'mensajes.html': 'mensajes',
+    'avisos.html': 'avisos',
+    'mensajes.html': 'avisos',
     'perfil.html': 'perfil',
     'vendedor-perfil.html': 'perfil',
     'solicitud.html': 'perfil',
   };
 
-  const PROTEGIDOS = new Set(['guardados', 'publicar', 'mensajes', 'perfil']);
+  const PROTEGIDOS = new Set(['guardados', 'publicar', 'avisos', 'perfil']);
 
   function marcarActivo() {
     const archivo = location.pathname.split('/').pop() || 'feed.html';
@@ -34,11 +35,22 @@
     });
   }
 
+  async function pintarAvisos() {
+    const dot = mount.querySelector('[data-badge="avisos"]');
+    if (!dot) return;
+    if (!currentUser) { dot.hidden = true; return; }
+    try {
+      const { noLeidas } = await api.get('/notificaciones/no-leidas');
+      dot.hidden = noLeidas === 0;
+    } catch (e) { dot.hidden = true; }
+  }
+
   function init() {
     const bind = async () => {
       await esperarSesion();
       marcarActivo();
       gatearInvitado();
+      pintarAvisos();
     };
     if (mount.querySelector('.mobile-nav')) { void bind(); return; }
     mount.addEventListener('partialloaded', function cargar() {
