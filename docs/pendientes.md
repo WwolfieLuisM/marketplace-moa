@@ -1,6 +1,6 @@
 # Pendientes — Marketplace Moa
 
-Estado de referencia: `main` en `ff41ae2` (2026-09-21). Este documento agrupa todo
+Estado de referencia: `main` en `3164716` (2026-09-21). Este documento agrupa todo
 lo que quedó a medias o en backlog, con el **por qué**, **dónde** está el código
 y **cómo** retomarlo. Los cambios en producción se hacen SIEMPRE desde el clone de
 deploy (`%TEMP%\opencode\moa-deploy2`) → commit → push a `main` → redeploy en
@@ -14,6 +14,32 @@ Render (backend) / CI de Cloudflare (frontend).
 | `95624b4` | Eliminado export duplicado `correoConfigurado` en `mailer.js` (SyntaxError de arranque en Render) |
 | `879ed1e` | Google login: script GSI en `registro.html` + botón estándar de Google en el panel (`ui.js` `montarGooglePanel`, adiós `g.prompt()`) |
 | `ff41ae2` | Contador de demo alineado al día de Cuba (`America/Havana`), batching y purga de tokens en `jobs.service.js`, validación de `categoria` en feed, claves débiles ampliadas, `backend/.env.example`, cron de suscripciones a `0 5 * * *` |
+
+## Email transaccional: DECISIÓN tomada (2026-09-21)
+
+- **No se envían correos de recuperación desde Render.** Diagnóstico cerrado con
+  los logs de runtime (`Render MCP → list logs`, servicio `srv-dajdg7oae00c739hum9g`):
+  `smtp.gmail.com` resuelve por DNS, pero **Google descarta el `SYN`** a
+  `:465`/`:587` desde la IP de salida de Render (Oregon, plan free) →
+  `ETIMEDOUT`, y tras 2 puertos el mailer loguea
+  *"Agotados todos los puertos SMTP"*. Nunca hubo una línea de éxito
+  (`enviado OK`) en el historial: el correo jamás salió (no está en Spam). No es
+  credenciales (`EAUTH` no se alcanza) ni config: el egress general de la
+  instancia funciona (Neon y Cloudinary sí conectan por TCP). En local sí entrega
+  porque la IP doméstica pasa.
+- **Decisión del PO (2026-09-21): NO implementar Brevo/Resend por ahora.**
+  El backend de recuperación queda tal cual (funcional: token de un solo uso,
+  30 min), pero **ninguna sesión futura debe "arreglar" esto como bug**: es
+  comportamiento esperado hasta nuevo aviso.
+- **Procedimiento manual actual**: si un usuario olvida la contraseña, que
+  contacte. Reset manual desde local: insertar una fila en `token_recuperacion`
+  (token hash + `expira_en` futuro, `usado = false`) contra la DB de producción
+  (`Neon MCP`, proyecto `bitter-sea-06796259`) y usar el enlace
+  `restablecer.html?token=...`, o actualizar directamente el hash bcrypt de
+  `users.password` (generarlo en local con `pc` o bcryptjs).
+- **Cómo retomarlo cuando se decida**: reemplazar el transporte SMTP de
+  `backend/src/lib/mailer.js` por la API/SMTP de Brevo o Resend (env vars nuevas
+  + desbloquear puerto/endpoint), y quitar este bloque.
 
 ## Pendientes de seguridad
 
@@ -81,9 +107,10 @@ Render (backend) / CI de Cloudflare (frontend).
 
 ### 8. Mailer: DNS lookup al importar (#2)
 - `backend/src/lib/mailer.js:11` resuelve `smtp.gmail.com` a nivel de módulo.
-  Hoy funciona en Render (log `[mailer] smtp.gmail.com -> IPv4 ...`). Si el DNS
-  fallara, bloquearía el arranque. Opción: lazy-init dentro de
-  `enviarCorreoRecuperacion`.
+  Sirve ya para diagnosticar (log `[mailer] smtp.gmail.com -> IPv4 ...`), pero si
+  el DNS fallara bloquearía el arranque. Opción: lazy-init dentro de
+  `enviarCorreoRecuperacion`. Independiente de la decisión de arriba (el bloqueo
+  actual es de red, no de DNS).
 
 ### 9. Favoritos huérfanos (#18)
 - El soft-delete de productos/publicaciones no borra `Favorito`. No se muestran
@@ -104,7 +131,7 @@ Render (backend) / CI de Cloudflare (frontend).
 
 ### 12. Copia de trabajo de Desktop divergida
 - `C:\Users\rosal\Desktop\marketplace-moa` no está en `origin/main`
-  (HEAD `1949170` vs `ff41ae2`, con borrados staged del frontend viejo Next.js).
+  (HEAD `1949170` vs `3164716`, con borrados staged del frontend viejo Next.js).
   No commiter desde ahí; decidir si alinear con `main`.
 
 ## Notas de producto a validar
