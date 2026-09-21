@@ -2,7 +2,10 @@ name: Revisar suscripciones diarias
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    # 05:00 UTC = ~medianoche en Cuba (America/Havana): el "día" del negocio.
+    # La zona de Cuba tiene DST, así que en verano cae a la 01:00 local: el
+    # contador diario se resuelve solo por clave de día en el backend.
+    - cron: "0 5 * * *"
   workflow_dispatch: {}
 
 jobs:

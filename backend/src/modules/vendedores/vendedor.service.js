@@ -74,6 +74,10 @@ async function solicitar({ userId, datos }) {
         direccionFisica: direccionFisica || null,
         estadoLicencia: "pendiente",
         estadoSuscripcion: "demo",
+        // Invariante: un demo siempre tiene fechas, aunque la licencia siga
+        // pendiente. Si nunca se aprueba, el job puede expirarlo y limpiar.
+        demoIniciaEn: new Date(),
+        demoTerminaEn: twoDaysFromNow(),
       },
     }),
   ]);

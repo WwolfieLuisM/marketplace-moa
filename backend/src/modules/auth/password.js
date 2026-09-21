@@ -1,9 +1,20 @@
 export const CLAVES_DEBILES = new Set([
   "12345678",
+  "123456789",
+  "1234567890",
   "password",
   "contraseña",
   "11111111",
+  "22222222",
   "87654321",
+  "qwerty123",
+  "qwertyuiop",
+  "abcdefgh",
+  "admin123",
+  "marketplace",
+  "marketplacemoa",
+  "moa12345",
+  "usuario123",
 ]);
 
 const ERROR_CORTA = "La contraseña debe tener al menos 8 caracteres";

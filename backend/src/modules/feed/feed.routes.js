@@ -46,6 +46,9 @@ router.get("/productos", async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   try {
     const { reparto, categoria, orden, page } = req.query;
+    if (categoria && (!/^\d+$/.test(String(categoria)) || Number(categoria) < 1)) {
+      return res.status(400).json({ error: "El filtro de categoría debe ser un número válido" });
+    }
     const repartoUsuario = await leerRepartoUsuario(req);
     const publicaciones = await feedService.feed({
       repartoUsuario,

@@ -7,27 +7,28 @@ const LIMITE_PRODUCTOS_POR_DIA_DEMO = 5;
 const LIMITE_PRODUCTOS_TOTAL_DEMO = 10;
 const SUSCRIPCIONES_QUE_PUEDEN_PUBLICAR = ["demo", "activo", "exento"];
 
-function hoyLocalInicio() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function claveDiaUtc(fecha) {
-  return fecha.toISOString().slice(0, 10);
+// El "día" del contador de demo es el día de Cuba (America/Havana), no el de
+// la zona horaria del servidor (Render corre en UTC). Así los 5 productos/día
+// se reinician a medianoche cubana aunque el proceso viva en otro huso.
+function claveDiaCuba(fecha = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Havana",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(fecha); // YYYY-MM-DD
 }
 
 async function obtenerContadorDia(perfil) {
-  const hoy = hoyLocalInicio();
-  const claveHoy = claveDiaUtc(hoy);
+  const claveHoy = claveDiaCuba();
   const claveGuardada = perfil.ultimoResetContador
-    ? claveDiaUtc(new Date(perfil.ultimoResetContador))
+    ? claveDiaCuba(new Date(perfil.ultimoResetContador))
     : null;
 
   if (claveGuardada !== claveHoy) {
     await prisma.vendedorPerfil.update({
       where: { id: perfil.id },
-      data: { productosHoy: 0, ultimoResetContador: hoy },
+      data: { productosHoy: 0, ultimoResetContador: new Date() },
     });
     return 0;
   }
