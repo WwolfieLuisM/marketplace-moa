@@ -26,9 +26,14 @@
     <p class="form-sub">Escribe tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
 
     <form id="recForm" novalidate>
+      <div class="error-box" id="recError">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        <span id="recErrorText"></span>
+      </div>
+
       <label class="field">
         <span class="field-label">Correo electrónico</span>
-        <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+        <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required autocomplete="email">
       </label>
 
       <button type="submit" class="btn-cta btn-block">
@@ -57,21 +62,31 @@
   </div>
 </div>
 
+<script src="js/api.js"></script>
 <script>
 const form = document.getElementById('recForm');
-form.addEventListener('submit', e => {
+const recError = document.getElementById('recError');
+const recErrorText = document.getElementById('recErrorText');
+const modal = document.getElementById('okModal');
+
+form.addEventListener('submit', async e => {
   e.preventDefault();
+  recError.classList.remove('visible');
   const btn = form.querySelector('button[type="submit"]');
   btn.disabled = true;
   btn.classList.add('loading');
-  setTimeout(() => {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    const modal = document.getElementById('okModal');
+  try {
+    await api.post('/auth/olvide-password', { email: form.querySelector('input[name="email"]').value.trim() });
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    setTimeout(() => modal.classList.add('open'), 10);
-  }, 900);
+    requestAnimationFrame(() => modal.classList.add('open'));
+  } catch (error) {
+    recErrorText.textContent = error.message || 'No se pudo enviar el correo. Intenta de nuevo.';
+    recError.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
 });
 </script>
 </body>

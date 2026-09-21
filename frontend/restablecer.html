@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3B32">
+<title>Nueva contraseña — Marketplace Moa</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/moa.css">
+</head>
+<body class="auth-body">
+
+<div class="window-card">
+  <div class="window-bar">
+    <div class="window-dots"><span class="wd"></span><span class="wd"></span><span class="wd"></span></div>
+    <a href="login.html">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </a>
+  </div>
+
+  <div class="form-body">
+    <div class="brand-mark"><span class="m1">moa</span><span class="m2">mercado</span></div>
+    <h1 class="form-title">Nueva contraseña</h1>
+    <p class="form-sub">Elige una contraseña nueva para tu cuenta.</p>
+
+    <form id="resForm" novalidate>
+      <div class="error-box" id="resError">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        <span id="resErrorText"></span>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Nueva contraseña</span>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="Mínimo 8 caracteres" required minlength="8" autocomplete="new-password">
+          <button type="button" class="eye-btn" aria-label="Mostrar contraseña">
+            <svg class="eye-open" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 10S4 4 10 4s9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="10" cy="10" r="3"/></svg>
+            <svg class="eye-closed" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <span class="pw-hint">Mínimo 8 caracteres. Evita contraseñas comunes o tu propio correo.</span>
+        <span class="field-error" style="display:none">La contraseña no cumple los requisitos: mínimo 8 caracteres.</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Repite la contraseña</span>
+        <div class="password-wrap">
+          <input type="password" name="repetida" placeholder="Repite la contraseña" required autocomplete="new-password">
+          <button type="button" class="eye-btn" aria-label="Mostrar contraseña">
+            <svg class="eye-open" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 10S4 4 10 4s9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="10" cy="10" r="3"/></svg>
+            <svg class="eye-closed" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <span class="field-error" id="repeatError" style="display:none">Las contraseñas no coinciden.</span>
+      </label>
+
+      <button type="submit" class="btn-cta btn-block">
+        <span class="btn-label">Guardar contraseña</span>
+        <span class="btn-spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+      </button>
+    </form>
+
+    <p class="form-footer"><a href="login.html">Volver a iniciar sesión</a></p>
+  </div>
+</div>
+
+<div class="overlay" id="okModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="okTitle">
+    <div class="sheet-body center">
+      <div class="ok-icon">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"/></svg>
+      </div>
+      <h2 id="okTitle" style="font-size:20px;margin:0 0 6px">Contraseña actualizada</h2>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.5">Ya puedes iniciar sesión con tu nueva contraseña.</p>
+      <a href="login.html" class="btn-cta" style="width:100%;justify-content:center">Ir a iniciar sesión</a>
+    </div>
+    <button class="close-btn" aria-label="Cerrar" onclick="location.href='login.html'">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+const token = new URLSearchParams(location.search).get('token');
+
+const form = document.getElementById('resForm');
+const resError = document.getElementById('resError');
+const resErrorText = document.getElementById('resErrorText');
+const modal = document.getElementById('okModal');
+const pw = form.querySelector('input[name="password"]');
+const repetida = form.querySelector('input[name="repetida"]');
+const repeatError = document.getElementById('repeatError');
+const hint = form.querySelector('.pw-hint');
+
+function mostrarError(msg) {
+  resErrorText.textContent = msg;
+  resError.classList.add('visible');
+}
+
+if (!token) {
+  try { form.style.display = 'none'; } catch (e) {}
+  mostrarError('El enlace no es válido o ya expiró. Pide uno nuevo desde «Recuperar contraseña».');
+}
+
+pw.addEventListener('input', () => {
+  repeatError.style.display = 'none';
+  if (pw.value.length > 0 && pw.value.length < 8) {
+    hint.style.display = 'none';
+    pw.style.borderColor = 'var(--tag)';
+  } else {
+    hint.style.display = pw.value.length > 0 ? 'none' : '';
+    pw.style.borderColor = '';
+  }
+});
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  resError.classList.remove('visible');
+  repeatError.style.display = 'none';
+
+  if (pw.value.length < 8) {
+    resErrorText.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+    resError.classList.add('visible');
+    pw.focus();
+    return;
+  }
+  if (repetida.value !== pw.value) {
+    repeatError.style.display = 'inline-block';
+    repetida.focus();
+    return;
+  }
+
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  try {
+    await api.post('/auth/restablecer-password', { token, nuevaPassword: pw.value });
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => modal.classList.add('open'));
+  } catch (error) {
+    mostrarError(error.message || 'No se pudo actualizar la contraseña. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+
+document.querySelectorAll('.eye-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = btn.parentElement.querySelector('input');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.classList.toggle('show', show);
+  });
+});
+</script>
+</body>
+</html>
