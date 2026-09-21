@@ -4,8 +4,6 @@ import dns from "node:dns";
 const GMAIL_USER = process.env.GMAIL_SMTP_USER;
 const GMAIL_PASS = process.env.GMAIL_SMTP_PASS;
 
-const correoConfigurado = Boolean(GMAIL_USER && GMAIL_PASS);
-
 // Render no tiene ruta IPv6: resolvemos smtp.gmail.com a una IP IPv4 literal
 // y conectamos directo (con servername para que el TLS valide igual).
 // Google suele cortar el 587 desde datacenters: probamos 465 (SSL) primero
