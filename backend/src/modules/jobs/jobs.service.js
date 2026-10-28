@@ -2,6 +2,14 @@ import prisma from "../../lib/prisma.js";
 
 const SIETE_DIAS = 7 * 24 * 60 * 60 * 1000;
 
+// ============================================================
+// DESHABILITADO (PO 2026-10-28): licencias gratuitas y permanentes.
+// El job ya NO expira demos/suscripciones, NO pausa ni borra publicaciones.
+// Para reactivar el modelo anterior: descomentar los bloques marcados
+// "REACTIVAR" y las funciones pausarActivosDe/borrarActivosDe de abajo.
+// ============================================================
+
+/* REACTIVAR — pausa de publicaciones al vencer:
 async function pausarActivosDe(vendedorIds) {
   const ids = Array.isArray(vendedorIds) ? vendedorIds : [vendedorIds];
   if (ids.length === 0) return;
@@ -14,7 +22,9 @@ async function pausarActivosDe(vendedorIds) {
     data: { estado: "pausado" },
   });
 }
+*/
 
+/* REACTIVAR — borrado de publicaciones tras 7 días de gracia:
 async function borrarActivosDe(vendedorIds) {
   const ids = Array.isArray(vendedorIds) ? vendedorIds : [vendedorIds];
   if (ids.length === 0) return;
@@ -27,6 +37,7 @@ async function borrarActivosDe(vendedorIds) {
     data: { estado: "eliminado" },
   });
 }
+*/
 
 async function revisarSuscripciones() {
   const ahora = new Date();
@@ -39,6 +50,7 @@ async function revisarSuscripciones() {
     tokensExpurgados: 0,
   };
 
+  /* REACTIVAR — demos vencidos → vencido + pausa (y descomentar pausarActivosDe):
   const demosVencidos = await prisma.vendedorPerfil.findMany({
     where: {
       estadoSuscripcion: "demo",
@@ -55,7 +67,9 @@ async function revisarSuscripciones() {
     await pausarActivosDe(idsDemos);
   }
   resumen.demosVencidos = idsDemos.length;
+  */
 
+  /* REACTIVAR — activos vencidos → vencido + pausa (y descomentar pausarActivosDe):
   const activosVencidos = await prisma.vendedorPerfil.findMany({
     where: {
       estadoSuscripcion: "activo",
@@ -72,7 +86,9 @@ async function revisarSuscripciones() {
     await pausarActivosDe(idsActivos);
   }
   resumen.activosVencidos = idsActivos.length;
+  */
 
+  /* REACTIVAR — vencidos sin gracia (7 días) → publicaciones eliminadas (y descomentar borrarActivosDe):
   const sinGracia = await prisma.vendedorPerfil.findMany({
     where: {
       estadoSuscripcion: "vencido",
@@ -85,6 +101,7 @@ async function revisarSuscripciones() {
     await borrarActivosDe(idsSinGracia);
   }
   resumen.eliminadosPorGracia = idsSinGracia.length;
+  */
 
   const reseteados = await prisma.vendedorPerfil.updateMany({
     where: { productosHoy: { gt: 0 } },

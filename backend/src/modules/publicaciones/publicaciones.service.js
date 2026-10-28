@@ -93,7 +93,9 @@ async function crear({ userId, datos }) {
   }
 
   const perfil = await getVendedorPublicador(userId);
-  await validarContadoresDemo(perfil, productos.length);
+  // DESHABILITADO (PO 2026-10-28): licencias gratuitas y permanentes, sin
+  // límites demo. Para reactivar: descomentar la siguiente línea.
+  // await validarContadoresDemo(perfil, productos.length);
 
   const idsCategorias = await prisma.categoria.findMany({
     where: { id: { in: productos.map((p) => p.categoriaId) } },
@@ -168,15 +170,17 @@ async function crear({ userId, datos }) {
       }
     }
 
-    if (perfil.estadoSuscripcion === "demo") {
-      await tx.vendedorPerfil.update({
-        where: { id: perfil.id },
-        data: {
-          productosHoy: { increment: datosProductos.length },
-          productosTotalDemo: { increment: datosProductos.length },
-        },
-      });
-    }
+    // DESHABILITADO (PO 2026-10-28): contadores demo. Para reactivar:
+    // descomentar este bloque (junto con validarContadoresDemo de arriba).
+    // if (perfil.estadoSuscripcion === "demo") {
+    //   await tx.vendedorPerfil.update({
+    //     where: { id: perfil.id },
+    //     data: {
+    //       productosHoy: { increment: datosProductos.length },
+    //       productosTotalDemo: { increment: datosProductos.length },
+    //     },
+    //   });
+    // }
 
     return creada;
   });
