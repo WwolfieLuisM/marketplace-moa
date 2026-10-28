@@ -79,7 +79,8 @@
 
   async function cargar() {
     if (!otroId) { shell.innerHTML = '<div class="grid-skeleton">Conversación no válida.</div>'; composer.style.display = 'none'; return; }
-    const { otroUsuario, mensajes } = await api.get(`/mensajes/conversaciones/${otroId}`);
+    const { conversacion } = await api.get(`/mensajes/conversaciones/${otroId}`);
+    const { otroUsuario, mensajes } = conversacion;
     renderOtro(otroUsuario);
     shell.innerHTML = mensajes.length ? mensajes.map(bubble).join('') : '<div class="chat-empty">Todavía no hay mensajes. Escribe el primero.</div>';
     shell.scrollTop = shell.scrollHeight;
