@@ -41,9 +41,9 @@
   async function render() {
     grid.innerHTML = '<div class="grid-skeleton">Cargando guardados…</div>';
     try {
-      const favoritos = await api.get('/favoritos');
-      favCount.textContent = `(${favoritos.length})`;
-      if (!favoritos.length) {
+      const { productos } = await api.get('/favoritos');
+      favCount.textContent = `(${productos.length})`;
+      if (!productos.length) {
         grid.innerHTML = `
           <div class="grid-skeleton">
             Aún no tienes guardados.<br>
@@ -51,7 +51,7 @@
           </div>`;
         return;
       }
-      grid.innerHTML = favoritos.map((p) => moaProdCard(p, true, true)).join('');
+      grid.innerHTML = productos.map((p) => moaProdCard(p, true, true)).join('');
       bindGrid(grid);
       bindFav(grid);
     } catch (e) {
