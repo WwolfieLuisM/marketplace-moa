@@ -61,7 +61,7 @@
 
   async function render() {
     try {
-      const d = await api.get('/admin/resumen');
+      const { resumen: d } = await api.get('/admin/resumen');
       resumen.innerHTML = TARJETAS.map(([key, lbl]) => `
         <a class="card-card" ${key === 'vendedoresPendientes' ? 'href="admin-vendedores.html"' : ''}>
           <div class="card-num">${d[key] ?? '—'}</div>
