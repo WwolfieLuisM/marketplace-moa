@@ -431,8 +431,6 @@ function bindFav(root) {
       else { await api.post('/favoritos', { productoId }); }
       btn.setAttribute('aria-pressed', String(!on));
       btn.classList.toggle('active', !on);
-      const ev = new CustomEvent('favorito-cambio', { detail: { productoId, on: !on } });
-      window.dispatchEvent(ev);
     } catch (err) {
       alert(err.message || 'No se pudo guardar');
     }

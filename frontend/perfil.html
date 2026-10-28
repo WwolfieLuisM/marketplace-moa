@@ -183,7 +183,6 @@
       currentUser = user;
       llenarUsuario(user);
       mostrarMsg('Perfil actualizado', true);
-      window.dispatchEvent(new CustomEvent('sesion-actualizada'));
     } catch (err) {
       mostrarMsg(err.message || 'No se pudo guardar', false);
     } finally {
