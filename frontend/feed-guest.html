@@ -53,7 +53,7 @@
   <div class="grid" id="grid"></div>
 
   <div class="load-more" id="loadMoreWrap">
-    <button type="button" id="loadMore" onclick="openAuth()">Cargar más publicaciones</button>
+    <button type="button" id="loadMore">Cargar más publicaciones</button>
   </div>
 
 </main>
@@ -130,8 +130,7 @@
         for (const c of catRow.querySelectorAll('.cat')) c.classList.toggle('active', c.dataset.id === String(activoCat));
       }
       grid.innerHTML = html.length ? html.join('') : '<div class="grid-skeleton">No hay publicaciones todavía.</div>';
-      bindGrid(grid); // hearts guest → openAuth via bindFav/window.openAuth
-      bindKebab(grid);
+      bindGrid(grid); // hearts guest → openAuth via bindFav/window.openAuth; bindGrid ya llama bindKebab internamente
     } catch (e) {
       grid.innerHTML = '<div class="grid-skeleton">No se pudo cargar el feed. Intenta de nuevo.</div>';
       loadMoreWrap.style.display = 'none';
