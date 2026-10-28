@@ -25,6 +25,7 @@
     <div class="chat-shell" id="chatShell">
       <div class="grid-skeleton">Cargando conversación…</div>
     </div>
+    <div class="form-msg" id="chatError" hidden></div>
     <form class="composer" id="composer">
       <input type="text" id="chatInput" placeholder="Escribe un mensaje…" autocomplete="off" maxlength="5000">
       <button type="submit" class="btn-cta" style="height:44px;min-width:44px;padding:0 16px" aria-label="Enviar">
@@ -52,6 +53,7 @@
   const shell = document.getElementById('chatShell');
   const composer = document.getElementById('composer');
   const input = document.getElementById('chatInput');
+  const chatError = document.getElementById('chatError');
 
   function addRef(prod) {
     if (!prod) return '';
@@ -90,10 +92,18 @@
     e.preventDefault();
     const contenido = input.value.trim();
     if (!contenido) return;
+    chatError.hidden = true;
     input.value = '';
-    const { mensaje } = await api.post('/mensajes', { destinatarioId: otroId, contenido });
-    shell.insertAdjacentHTML('beforeend', bubble(mensaje));
-    shell.scrollTop = shell.scrollHeight;
+    try {
+      const { mensaje } = await api.post('/mensajes', { destinatarioId: otroId, contenido });
+      shell.insertAdjacentHTML('beforeend', bubble(mensaje));
+      shell.scrollTop = shell.scrollHeight;
+    } catch (err) {
+      // red móvil falla: restaurar el texto para que no se pierda
+      input.value = contenido;
+      chatError.textContent = 'No se pudo enviar. Revisa tu conexión y reintenta.';
+      chatError.hidden = false;
+    }
   });
 
   esperarSesion().then((u) => {
