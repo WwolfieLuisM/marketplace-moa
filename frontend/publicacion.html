@@ -86,7 +86,7 @@
       <div class="detail-body">
         <div class="detail-title-row">
           <h1>${esc(principal.nombre)}</h1>
-          ${sesion ? heartHtml(true, principal.id) : ''}
+          ${sesion ? heartHtml(principal.id) : ''}
         </div>
         <div class="detail-tags">
           <span class="badge badge-zone">${SVGS.zone} ${esc(pub.reparto || '—')}</span>
